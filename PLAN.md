@@ -353,7 +353,7 @@ Fuentes propias (inventario inicial por verificar):
 | Sección | Fuente candidata | Método probable | Notas |
 |---|---|---|---|
 | Tiempo | AEMET, municipio 23050 | API | Colector genérico |
-| Agenda | Ayuntamiento de Jaén (agenda y notas de prensa) | HTML o RSS | Fuente primaria |
+| Agenda | Ayuntamiento de Jaén (agenda y notas de prensa) | HTML y RSS | **Verificada el 30-09-2026 y en la config.** Agenda: listado HTML «Actividades de la semana» (sin RSS). Notas de prensa: RSS no anunciado, en ISO-8859-1 declarado solo en el XML |
 | Agenda | EnJaen.es | HTML | Web privada: pedir permiso o solo enlazar |
 | Agenda | Diputación (Jaén Paraíso Interior) | HTML | Es provincial: filtrar a la capital |
 | Agenda | Universidad de Jaén, Teatro Infanta Leonor, Teatro Darymelia, Auditorio de la Alameda | HTML o RSS | Programación |
