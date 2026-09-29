@@ -68,6 +68,25 @@ export interface Item {
   data?: Record<string, unknown>;
 }
 
+/** Lo que Claude redacta para un item recogido. */
+export interface DraftEntry {
+  /** Id de un `Item` de los recogidos: el validador lo comprueba (regla 2). */
+  item_id: string;
+  titulo: string;
+  /** Sin URLs: los enlaces los pone el render a partir del item. */
+  texto: string;
+}
+
+/** Salida de `draft`, con el esquema que se le pide a Claude. */
+export interface Draft {
+  /** Una frase para el saludo. */
+  titular: string;
+  /** Entradas por id de sección; solo las secciones que escribe la IA. */
+  secciones: Record<string, DraftEntry[]>;
+  /** Lo que Claude decidió no contar, y por qué. Se muestra en el PR. */
+  descartes: { item_id: string; motivo: string }[];
+}
+
 /** Frontmatter de una edición. */
 export interface EditionFrontmatter {
   ciudad: string;
