@@ -190,12 +190,12 @@ Lo que hace el editor, una vez:
 
 ### Fase 1: MVP de Jaén (salir en su Canal)
 
-- [ ] `pipeline/lib/http`: timeout, reintento, caché, `robots.txt` y User-Agent.
+- [x] `pipeline/lib/http`: timeout, reintento, caché, `robots.txt` y User-Agent.
 - [ ] Colectores genéricos con fixture y test: tiempo (AEMET), carburantes y RSS.
 - [ ] Colectores propios de Jaén para la agenda (Ayuntamiento y una fuente más), con fixture y test, y 3–4 feeds RSS locales en su config.
-- [ ] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
+- [x] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
 - [ ] `draft` con structured outputs y prompts versionados (comunes y de la ciudad).
-- [ ] `validate` y sección «Avisos».
+- [ ] `validate` y sección «Avisos». (El paso `validate` está hecho; falta pintar sus avisos en el PR, que llega con `borrador.yml`.)
 - [ ] Workflow `borrador.yml` (cron y ejecución manual con `--ciudad` y `--fecha`), con matriz de ciudades, que abre el PR descrito en la sección 5. De momento, solo `jaen` en la matriz.
 - [ ] Página de edición con copiar y compartir, archivo y RSS.
 - [ ] Landing con la edición de hoy y el botón «Seguir el canal».
@@ -359,7 +359,7 @@ Fuentes propias (inventario inicial por verificar):
 | Agenda | Universidad de Jaén, Teatro Infanta Leonor, Teatro Darymelia, Auditorio de la Alameda | HTML o RSS | Programación |
 | Movilidad | Ayuntamiento (cortes y obras) | HTML o RSS | Lo que la Policía Local publica solo en redes sociales queda fuera |
 | Movilidad | DGT | XML | Accesos A-44 y A-316 |
-| Noticias | Diario JAÉN, Jaén Hoy, Viva Jaén, Lacontradejaén, Ideal Jaén, Hora Jaén y noticiasdejaen.es | RSS | Colector genérico |
+| Noticias | Hora Jaén, Ideal Jaén (ruta `/jaen/jaen/`) y Diario JAÉN (ruta `/jaen/`) | RSS y sitemap de noticias | **Verificadas el 29-09-2026 y en la config.** Diario JAÉN no tiene RSS: se lee su sitemap de noticias, sin resumen. Descartadas: Jaén Hoy (su RSS es solo opinión) y noticiasdejaen.es (sin feed). Pendientes de red: Viva Jaén (ahora en `andaluciainformacion.es`) y La Contra de Jaén (redirige a su dominio sin `www`) |
 | Farmacias | Colegio Oficial de Farmacéuticos de Jaén | HTML | Investigar el formato |
 | Carburantes | API del Ministerio | JSON | IDMunicipio de Jaén |
 | Aceite | Poolred o Infaoliva | HTML | Revisar condiciones de uso; dato del día anterior |

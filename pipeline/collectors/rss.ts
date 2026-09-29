@@ -7,13 +7,19 @@
  * resumen corto en texto plano. El resumen es de la fuente y solo viaja al
  * prompt; nunca se publica tal cual (regla 4).
  */
-import { load } from 'cheerio';
-import { XMLParser } from 'fast-xml-parser';
-import { DateTime } from 'luxon';
 import { makeItemId } from '../lib/items.ts';
 import type { Collector, Item } from '../types.ts';
+import {
+  crearParser,
+  fechaIso,
+  limpiarHtml,
+  pasaFiltroDeRuta,
+  texto,
+  type Nodo,
+  type PathFilter,
+} from './comun.ts';
 
-export interface RssCollectorOptions {
+export interface RssCollectorOptions extends PathFilter {
   /** 'rss-diario-jaen'. Es también el `source` de sus items. */
   id: string;
   url: string;
@@ -38,18 +44,7 @@ export function rssCollector(options: RssCollectorOptions): Collector {
   };
 }
 
-const parser = new XMLParser({
-  ignoreAttributes: false,
-  attributeNamePrefix: '@_',
-  // dc:date → date, content:encoded → encoded. Las etiquetas que importan no
-  // chocan entre sí al quitar el prefijo.
-  removeNSPrefix: true,
-  htmlEntities: true,
-  // Todo como texto: un titular «2026» no debe convertirse en número.
-  parseTagValue: false,
-  trimValues: true,
-  isArray: (tagName) => ['item', 'entry', 'link', 'category'].includes(tagName),
-});
+const parser = crearParser(['item', 'entry', 'link', 'category']);
 
 /** De un feed RSS 2.0 o Atom a items del pipeline. */
 export function parseFeed(xml: string, source: Omit<RssCollectorOptions, 'url'>): Item[] {
@@ -66,6 +61,10 @@ export function parseFeed(xml: string, source: Omit<RssCollectorOptions, 'url'>)
     if (title === '') continue;
 
     const url = enlaceDe(entrada);
+    // El tope cuenta después del filtro: diez noticias de la capital, no diez
+    // entradas de las que luego sobreviven tres.
+    if (!pasaFiltroDeRuta(url, source)) continue;
+
     const item: Item = {
       id: makeItemId(source.id, url ?? title),
       source: source.id,
@@ -86,8 +85,6 @@ export function parseFeed(xml: string, source: Omit<RssCollectorOptions, 'url'>)
   return items;
 }
 
-type Nodo = Record<string, unknown>;
-
 function entradasDe(doc: Record<string, unknown>): Nodo[] {
   const rss = doc.rss as Nodo | undefined;
   const channel = rss?.channel as Nodo | undefined;
@@ -97,16 +94,6 @@ function entradasDe(doc: Record<string, unknown>): Nodo[] {
   if (Array.isArray(feed?.entry)) return feed.entry as Nodo[];
 
   return [];
-}
-
-/** El texto de un nodo, venga como cadena o como objeto con atributos. */
-function texto(valor: unknown): string {
-  if (typeof valor === 'string') return valor;
-  if (typeof valor === 'number') return String(valor);
-  if (valor !== null && typeof valor === 'object' && '#text' in valor) {
-    return texto((valor as Nodo)['#text']);
-  }
-  return '';
 }
 
 /**
@@ -144,18 +131,10 @@ function esUrl(valor: string): boolean {
 /** RSS usa RFC 2822; Atom y `dc:date`, ISO 8601. Se devuelve siempre ISO. */
 function fechaDe(entrada: Nodo): string | undefined {
   const candidatas = [entrada.pubDate, entrada.date, entrada.published, entrada.updated];
-
   for (const candidata of candidatas) {
-    const valor = texto(candidata).trim();
-    if (valor === '') continue;
-
-    const rfc = DateTime.fromRFC2822(valor, { setZone: true });
-    if (rfc.isValid) return rfc.toISO() ?? undefined;
-
-    const iso = DateTime.fromISO(valor, { setZone: true });
-    if (iso.isValid) return iso.toISO() ?? undefined;
+    const fecha = fechaIso(texto(candidata));
+    if (fecha !== undefined) return fecha;
   }
-
   return undefined;
 }
 
@@ -167,12 +146,6 @@ function resumen(entrada: Nodo): string {
     if (limpio !== '') return recortar(limpio, MAX_SUMMARY_CHARS);
   }
   return '';
-}
-
-/** Muchos feeds meten HTML (y entidades) en la descripción y hasta en el título. */
-function limpiarHtml(html: string): string {
-  if (html.trim() === '') return '';
-  return load(html, null, false).text().replace(/\s+/g, ' ').trim();
 }
 
 /** Corta por una palabra entera, nunca a mitad. */

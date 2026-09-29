@@ -1,3 +1,5 @@
+import { rssCollector } from '../../pipeline/collectors/rss.ts';
+import { newsSitemapCollector } from '../../pipeline/collectors/sitemap-noticias.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
 
@@ -34,7 +36,32 @@ export const jaen: CityConfig = {
     { id: 'aceite', title: '🫒 El aceite', writer: 'code' },
   ],
 
-  collectors: [],
+  // Verificados el 29 de septiembre de 2026: responden, su robots.txt los
+  // permite y pasan por el colector sin tocar nada. El orden importa: ante un
+  // duplicado gana el primero, así que van delante los que traen resumen.
+  collectors: [
+    // Diez noticias locales, todas con resumen.
+    rssCollector({
+      id: 'rss-hora-jaen',
+      url: 'https://www.horajaen.com/feed/',
+      section: 'te_afecta',
+    }),
+    // Mezcla capital y provincia; la ruta dice cuál es cuál.
+    rssCollector({
+      id: 'rss-ideal-jaen',
+      url: 'https://www.ideal.es/rss/2.0/?section=jaen',
+      section: 'te_afecta',
+      includePaths: ['/jaen/jaen/'],
+    }),
+    // Sin RSS, pero con sitemap de noticias. No trae resumen; la ruta separa la
+    // capital (/jaen/) de la provincia, la opinión y los deportes.
+    newsSitemapCollector({
+      id: 'sitemap-diario-jaen',
+      url: 'https://www.diariojaen.es/sitemapforgoogle.xml',
+      section: 'te_afecta',
+      includePaths: ['/jaen/'],
+    }),
+  ],
 
   holidays: [],
 };
