@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * CLI: une el motor (`pipeline/`) con las ciudades (`ciudades/`). En la fase 0
- * solo está `whatsapp`; `edicion` y `fuentes` llegan en la fase 1.
+ * CLI: une el motor (`pipeline/`) con las ciudades (`ciudades/`). `edicion`
+ * llega con el resto de la fase 1.
  */
 import { getCiudad, idsCiudades } from '../ciudades/index.ts';
 import { editionUrl, readEdition } from '../pipeline/lib/edicion.ts';
 import { today } from '../pipeline/lib/fechas.ts';
+import { HttpClient } from '../pipeline/lib/http.ts';
 import { renderWhatsapp } from '../pipeline/render/whatsapp.ts';
+import { collect, formatHealthTable } from '../pipeline/steps/collect.ts';
 
 function parseArgs(argv: string[]): { command: string; flags: Map<string, string> } {
   const [command = 'ayuda', ...rest] = argv;
@@ -30,7 +32,7 @@ const AYUDA = `Uso: npm run <comando> -- --ciudad <id> [--fecha AAAA-MM-DD]
 
   whatsapp   Imprime el texto listo para pegar en el Canal.
   edicion    Genera la edición (fase 1).
-  fuentes    Tabla de salud de las fuentes (fase 1).
+  fuentes    Tabla de salud de las fuentes: pide a cada una y dice cómo está.
   ciudades   Lista las ciudades. Con --json, la matriz que consume el CI.
 
 Ciudades: ${idsCiudades.join(', ')}
@@ -69,8 +71,19 @@ async function main(): Promise<number> {
       return 0;
     }
 
+    case 'fuentes': {
+      // Pide de verdad a cada fuente: es la forma de saber si siguen vivas.
+      const { items, health } = await collect(ciudad, fecha, new HttpClient());
+      const errores = health.filter((fuente) => fuente.status === 'error').length;
+      process.stdout.write(
+        `Fuentes de ${ciudad.name} (${fecha})\n\n${formatHealthTable(health)}\n\n` +
+          `${String(items.length)} items de ${String(health.length)} fuentes, ${String(errores)} con error.\n`,
+      );
+      // Con alguna fuente caída sale con error, para que un workflow lo note.
+      return errores > 0 ? 1 : 0;
+    }
+
     case 'edicion':
-    case 'fuentes':
       process.stderr.write(`El comando «${command}» llega en la fase 1.\n`);
       return 1;
 
