@@ -1,3 +1,4 @@
+import { fuelCollector } from '../../pipeline/collectors/carburantes.ts';
 import { rssCollector } from '../../pipeline/collectors/rss.ts';
 import { newsSitemapCollector } from '../../pipeline/collectors/sitemap-noticias.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
@@ -27,8 +28,8 @@ export const jaen: CityConfig = {
   ],
 
   aemetMunicipality: '23050',
-  // fuelMunicipalityId: pendiente de sacarlo del listado de la provincia en la
-  // API del Ministerio. Mientras no esté, la sección de carburantes se omite.
+  // IDMunicipio del listado de la provincia 23 en la API del Ministerio.
+  fuelMunicipalityId: '3543',
 
   sections: [
     ...seccionesComunes(name),
@@ -61,6 +62,7 @@ export const jaen: CityConfig = {
       section: 'te_afecta',
       includePaths: ['/jaen/'],
     }),
+    fuelCollector(),
   ],
 
   holidays: [],

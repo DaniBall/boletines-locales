@@ -1,3 +1,4 @@
+import { fuelCollector } from '../../pipeline/collectors/carburantes.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
 
@@ -18,7 +19,8 @@ export const leon: CityConfig = {
   scope: ['León', 'San Andrés del Rabanedo', 'Villaquilambre', 'Valverde de la Virgen', 'Sariegos'],
 
   aemetMunicipality: '24089',
-  // fuelMunicipalityId: pendiente del listado de la provincia.
+  // IDMunicipio del listado de la provincia 24 en la API del Ministerio.
+  fuelMunicipalityId: '3674',
 
   sections: [
     ...seccionesComunes(name),
@@ -32,7 +34,7 @@ export const leon: CityConfig = {
     { id: 'tapa', title: '🍢 La tapa', writer: 'ai' },
   ],
 
-  collectors: [],
+  collectors: [fuelCollector()],
 
   holidays: [],
 };
