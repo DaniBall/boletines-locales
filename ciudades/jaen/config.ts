@@ -3,6 +3,7 @@ import { rssCollector } from '../../pipeline/collectors/rss.ts';
 import { newsSitemapCollector } from '../../pipeline/collectors/sitemap-noticias.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
+import { agendaAyuntamientoJaen } from './collectors/agenda-ayuntamiento.ts';
 
 const name = 'Jaén';
 
@@ -61,6 +62,14 @@ export const jaen: CityConfig = {
       url: 'https://www.andaluciainformacion.es/rss/jaen-local/',
       section: 'te_afecta',
     }),
+    // Notas de prensa del Ayuntamiento: fuente primaria, pero sin resumen y
+    // con poca frecuencia. Su RSS no se anuncia en la web y viene en
+    // ISO-8859-1 declarado solo dentro del XML.
+    rssCollector({
+      id: 'ayto-jaen-noticias',
+      url: 'https://www.aytojaen.es/portal/p_26_RSS_Noticias.jsp?codbusqueda=2&language=es',
+      section: 'te_afecta',
+    }),
     // Sin RSS, pero con sitemap de noticias. No trae resumen; la ruta separa la
     // capital (/jaen/) de la provincia, la opinión y los deportes.
     newsSitemapCollector({
@@ -70,6 +79,7 @@ export const jaen: CityConfig = {
       includePaths: ['/jaen/'],
     }),
     fuelCollector(),
+    agendaAyuntamientoJaen(),
   ],
 
   holidays: [],

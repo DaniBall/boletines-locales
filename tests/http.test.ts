@@ -76,6 +76,45 @@ describe('el cliente HTTP', () => {
     expect(respuesta.body).toBe('Máxima en Jaén: 32°');
   });
 
+  it('sin charset en la cabecera, lo lee de la declaración XML', async () => {
+    handler = (_req, res) => {
+      res.setHeader('content-type', 'application/xml');
+      res.end(
+        Buffer.from(
+          '<?xml version="1.0" encoding="iso-8859-1"?><rss><title>Ayuntamiento de Jaén</title></rss>',
+          'latin1',
+        ),
+      );
+    };
+
+    const respuesta = await cliente().get(`${base}/rss-municipal`);
+
+    expect(respuesta.body).toContain('Ayuntamiento de Jaén');
+  });
+
+  it('sin charset en la cabecera, lo lee del meta del HTML', async () => {
+    handler = (_req, res) => {
+      res.setHeader('content-type', 'text/html');
+      res.end(
+        Buffer.from(
+          '<html><head><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" /></head><body>Agenda de Jaén</body></html>',
+          'latin1',
+        ),
+      );
+    };
+
+    expect((await cliente().get(`${base}/agenda-municipal`)).body).toContain('Agenda de Jaén');
+  });
+
+  it('la cabecera manda sobre lo que diga el documento', async () => {
+    handler = (_req, res) => {
+      res.setHeader('content-type', 'application/xml; charset=utf-8');
+      res.end(Buffer.from('<?xml version="1.0" encoding="iso-8859-1"?><a>Jaén</a>', 'utf8'));
+    };
+
+    expect((await cliente().get(`${base}/contradictorio`)).body).toContain('Jaén');
+  });
+
   it('falla cuando la fuente no contesta a tiempo', async () => {
     handler = () => {
       // Nunca responde: el timeout tiene que cortar.

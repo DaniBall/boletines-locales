@@ -249,8 +249,9 @@ function delay(ms: number): Promise<void> {
 
 /** Decodifica el cuerpo según el `charset` de la cabecera; por defecto, UTF-8. */
 async function decodeBody(response: Response): Promise<string> {
-  const charset = parseCharset(response.headers.get('content-type'));
   const buffer = await response.arrayBuffer();
+  const charset =
+    parseCharset(response.headers.get('content-type')) ?? sniffCharset(buffer) ?? 'utf-8';
   try {
     return new TextDecoder(charset).decode(buffer);
   } catch {
@@ -258,9 +259,26 @@ async function decodeBody(response: Response): Promise<string> {
   }
 }
 
-function parseCharset(contentType: string | null): string {
+function parseCharset(contentType: string | null): string | undefined {
   const match = contentType?.match(/charset=\s*"?([\w-]+)"?/i);
-  return match?.[1]?.toLowerCase() ?? 'utf-8';
+  return match?.[1]?.toLowerCase();
+}
+
+/**
+ * Cuando la cabecera no dice el `charset`, lo dice el propio documento: la
+ * declaración XML (`<?xml encoding="iso-8859-1"?>`) o el `<meta>` del HTML.
+ * Es lo que hacen los navegadores, y hay webs municipales que solo lo dicen
+ * ahí. Se lee el principio en latin1, que nunca falla con bytes ASCII.
+ */
+export function sniffCharset(buffer: ArrayBuffer): string | undefined {
+  const bytes = new Uint8Array(buffer);
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) return 'utf-8';
+
+  const inicio = new TextDecoder('latin1').decode(bytes.subarray(0, 2048));
+  const declarado =
+    /^\s*<\?xml[^>]*\bencoding\s*=\s*["']([\w-]+)["']/i.exec(inicio)?.[1] ??
+    /<meta[^>]+charset\s*=\s*["']?([\w-]+)/i.exec(inicio)?.[1];
+  return declarado?.toLowerCase();
 }
 
 /**
