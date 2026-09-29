@@ -61,6 +61,21 @@ export function previousDates(date: IsoDate, days: number): IsoDate[] {
   );
 }
 
+/** Suma (o resta, con negativos) días a una fecha de edición. */
+export function shiftDate(date: IsoDate, days: number): IsoDate {
+  return parseIsoDate(date).plus({ days }).toISODate() as IsoDate;
+}
+
+/**
+ * El día al que pertenece un instante ISO, ya en Europe/Madrid. Las fuentes dan
+ * las horas en su propio formato: un evento a las 00:30 con zona UTC es de la
+ * madrugada de aquí, no del día anterior.
+ */
+export function toIsoDate(value: string): IsoDate | undefined {
+  const dt = DateTime.fromISO(value, { zone: TIMEZONE });
+  return dt.isValid ? dt.toISODate() : undefined;
+}
+
 /**
  * Si una sección de temporada está activa en esa fecha. `from` y `to` son MM-DD
  * y el tramo puede cruzar el cambio de año (por ejemplo, del 11-01 al 03-31).
