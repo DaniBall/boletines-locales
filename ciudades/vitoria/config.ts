@@ -10,7 +10,7 @@ export const vitoria: CityConfig = {
   // Provisional: el nombre y el dominio están sin decidir.
   brand: {
     name: `Boletín de ${name}`,
-    domain: 'https://example.invalid',
+    domain: 'https://boletin-vitoria.dbolamartinez.workers.dev',
     channelUrl: '',
   },
 

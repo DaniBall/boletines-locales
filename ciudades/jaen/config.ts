@@ -10,7 +10,7 @@ export const jaen: CityConfig = {
   // Provisional. Candidatos al nombre: «El Lagarto», «Pipirrana».
   brand: {
     name: `Boletín de ${name}`,
-    domain: 'https://example.invalid',
+    domain: 'https://boletin-jaen.dbolamartinez.workers.dev',
     channelUrl: '',
   },
 
