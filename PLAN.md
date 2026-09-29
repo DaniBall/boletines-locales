@@ -361,7 +361,7 @@ Fuentes propias (inventario inicial por verificar):
 | Movilidad | DGT | XML | Accesos A-44 y A-316 |
 | Noticias | Hora Jaén, Ideal Jaén (ruta `/jaen/jaen/`) y Diario JAÉN (ruta `/jaen/`) | RSS y sitemap de noticias | **Verificadas el 29-09-2026 y en la config.** Diario JAÉN no tiene RSS: se lee su sitemap de noticias, sin resumen. Descartadas: Jaén Hoy (su RSS es solo opinión) y noticiasdejaen.es (sin feed). Pendientes de red: Viva Jaén (ahora en `andaluciainformacion.es`) y La Contra de Jaén (redirige a su dominio sin `www`) |
 | Farmacias | Colegio Oficial de Farmacéuticos de Jaén | HTML | Investigar el formato |
-| Carburantes | API del Ministerio | JSON | IDMunicipio de Jaén |
+| Carburantes | API del Ministerio | JSON | **Verificada el 30-09-2026 y en la config**: IDMunicipio 3543 |
 | Aceite | Poolred o Infaoliva | HTML | Revisar condiciones de uso; dato del día anterior |
 | Deporte (fase 1.5) | Real Jaén, Jaén Paraíso Interior FS | HTML | Partidos del finde |
 | Bus (fase 2+) | Consorcio de Transporte Metropolitano del Área de Jaén | API de la red CTAN | Cambios de líneas y horarios |
@@ -387,7 +387,7 @@ Fuentes propias (inventario inicial por verificar):
 | Movilidad | DGT | XML | Accesos A-66, A-231, AP-71 y N-601; en invierno, puertos de la provincia |
 | Noticias | Diario de León, Leonoticias, La Nueva Crónica, iLeón, Digital de León y Ahora León | RSS | Colector genérico |
 | Farmacias | Colegio Oficial de Farmacéuticos de León | HTML | Investigar el formato |
-| Carburantes | API del Ministerio | JSON | IDMunicipio de León |
+| Carburantes | API del Ministerio | JSON | **Verificada el 30-09-2026 y en la config**: IDMunicipio 3674 |
 | La tapa | Archivo en el repo que rellena el editor, o formulario | Manual | Sin fuente automática; también entra por patrocinio |
 | Deporte (fase 1.5) | Cultural Leonesa, Ademar León | HTML | Partidos del finde |
 
@@ -413,5 +413,5 @@ Fuentes propias (inventario inicial por verificar):
 | Transporte | TUVISA y tranvía (Euskotren) | Datos abiertos o HTML | Para la sección 🚋 |
 | Noticias | El Correo (Álava), Noticias de Álava, Gasteiz Hoy, Norte Exprés y GasteizBerri | RSS | Colector genérico; GasteizBerri es además competencia |
 | Farmacias | Colegio Oficial de Farmacéuticos de Álava | HTML | Investigar el formato |
-| Carburantes | API del Ministerio | JSON | IDMunicipio de Vitoria-Gasteiz |
+| Carburantes | API del Ministerio | JSON | **Verificada el 30-09-2026 y en la config**: IDMunicipio 46 |
 | Deporte (fase 1.5) | Baskonia, Deportivo Alavés | HTML | Partidos del finde |

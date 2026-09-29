@@ -1,3 +1,4 @@
+import { fuelCollector } from '../../pipeline/collectors/carburantes.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
 
@@ -18,7 +19,8 @@ export const vitoria: CityConfig = {
   scope: ['Vitoria-Gasteiz'],
 
   aemetMunicipality: '01059',
-  // fuelMunicipalityId: pendiente del listado de la provincia.
+  // IDMunicipio del listado de la provincia 01 en la API del Ministerio.
+  fuelMunicipalityId: '46',
 
   sections: [
     ...seccionesComunes(name),
@@ -27,7 +29,7 @@ export const vitoria: CityConfig = {
     { id: 'anillo_verde', title: '🌳 Anillo Verde', writer: 'ai' },
   ],
 
-  collectors: [],
+  collectors: [fuelCollector()],
 
   holidays: [],
 };
