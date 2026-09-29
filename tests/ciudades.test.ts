@@ -79,6 +79,18 @@ describe('cada ciudad', () => {
     },
   );
 
+  it.each(ciudades.map((ciudad) => [ciudad.id, ciudad] as const))(
+    '%s solo tiene colectores para secciones que existen, con ids únicos',
+    (_id, ciudad) => {
+      const secciones = new Set(ciudad.sections.map((seccion) => seccion.id));
+      for (const colector of ciudad.collectors) {
+        expect(secciones, `${colector.id} → ${colector.section}`).toContain(colector.section);
+      }
+      const ids = ciudad.collectors.map((colector) => colector.id);
+      expect(new Set(ids).size).toBe(ids.length);
+    },
+  );
+
   it('solo usa secciones propias que no pisen las comunes', () => {
     const propias = ciudades.flatMap((ciudad) => ciudad.sections.slice(7).map((s) => s.id));
     expect(propias).toEqual(['aceite', 'carreteras', 'tapa', 'tuvisa', 'anillo_verde']);

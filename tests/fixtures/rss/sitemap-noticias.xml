@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sitemap de noticias inventado, en el formato de Google News. No es contenido de terceros. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://diario-prueba.es/villa/el-pleno-aprueba-el-carril-bici</loc>
+    <news:news>
+      <news:publication><news:name>Diario de Prueba</news:name><news:language>es</news:language></news:publication>
+      <news:publication_date>2026-09-21T07:00:00+02:00</news:publication_date>
+      <news:title>El pleno aprueba el carril bici de la avenida &amp; la ronda</news:title>
+    </news:news>
+    <image:image><image:loc>https://diario-prueba.es/img/1.jpg</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://diario-prueba.es/opinion/editorial/lo-que-pensamos</loc>
+    <news:news>
+      <news:publication><news:name>Diario de Prueba</news:name><news:language>es</news:language></news:publication>
+      <news:publication_date>2026-09-21T08:00:00+02:00</news:publication_date>
+      <news:title>Lo que pensamos del carril bici</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://diario-prueba.es/villa/corte-de-agua-en-el-centro</loc>
+    <news:news>
+      <news:publication><news:name>Diario de Prueba</news:name><news:language>es</news:language></news:publication>
+      <news:publication_date>2026-09-21T09:30:00+02:00</news:publication_date>
+      <news:title>Corte de agua en el centro el martes</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://diario-prueba.es/comarca/feria-del-queso</loc>
+    <news:news>
+      <news:publication><news:name>Diario de Prueba</news:name><news:language>es</news:language></news:publication>
+      <news:publication_date>2026-09-20T12:00:00+02:00</news:publication_date>
+      <news:title>La comarca celebra la feria del queso</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://diario-prueba.es/aviso-legal</loc>
+  </url>
+</urlset>
