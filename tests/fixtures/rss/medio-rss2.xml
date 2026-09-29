@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Feed inventado con las rarezas típicas de los medios locales. No es contenido de terceros. -->
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Diario de Villa Prueba</title>
+    <link>https://medio-prueba.es/</link>
+    <atom:link href="https://medio-prueba.es/rss" rel="self" type="application/rss+xml"/>
+    <description>Noticias inventadas para los tests</description>
+
+    <item>
+      <title>Cortes de tráfico en la calle Mayor &amp; la plaza</title>
+      <link>https://medio-prueba.es/noticias/cortes-calle-mayor?utm_source=rss</link>
+      <description><![CDATA[<p>El Ayuntamiento cortará la calle Mayor&nbsp;desde las <strong>8:00</strong>. <a href="https://medio-prueba.es/x">Más</a></p>]]></description>
+      <pubDate>Mon, 21 Sep 2026 08:30:00 +0200</pubDate>
+      <guid isPermaLink="false">medio-prueba-12345</guid>
+      <category>Movilidad</category>
+      <category>Ciudad</category>
+    </item>
+
+    <item>
+      <title>Abre el plazo de las ayudas al comercio</title>
+      <guid>https://medio-prueba.es/noticias/ayudas-comercio</guid>
+      <description>La convocatoria est&aacute; dotada con 200.000 euros.</description>
+      <dc:date>2026-09-20T17:45:00Z</dc:date>
+    </item>
+
+    <item>
+      <title></title>
+      <link>https://medio-prueba.es/noticias/sin-titulo</link>
+      <description>Esta entrada no tiene titular y debe saltarse.</description>
+    </item>
+
+    <item>
+      <title>Una noticia con una entradilla muy larga</title>
+      <link>https://medio-prueba.es/noticias/larga</link>
+      <description>Primera frase de una entradilla muy larga que sigue y sigue. Segunda frase que añade detalles que a la redacción no le hacen falta. Tercera frase con más contexto histórico del asunto. Cuarta frase con declaraciones de varias partes implicadas en el tema. Quinta frase con cifras que ya aparecían antes. Sexta frase que repite lo dicho con otras palabras. Séptima frase para asegurarse de pasar del límite de caracteres. Octava frase, por si acaso, que nunca debería llegar al prompt.</description>
+      <pubDate>Sun, 20 Sep 2026 10:00:00 +0200</pubDate>
+    </item>
+
+    <item>
+      <title>Una entrada sin enlace de ningún tipo</title>
+      <guid isPermaLink="false">solo-un-identificador-interno</guid>
+      <content:encoded><![CDATA[<div>Solo trae el cuerpo en <em>content:encoded</em>.</div>]]></content:encoded>
+    </item>
+  </channel>
+</rss>
