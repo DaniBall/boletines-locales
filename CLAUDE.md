@@ -85,7 +85,7 @@ interface SectionDef {
 interface Collector {
   id: string;                     // 'aemet', 'ayto-agenda', 'rss-diario-jaen'…
   section: string;                // id de una SectionDef de la ciudad
-  collect(ctx: { city: CityConfig; date: string }): Promise<Item[]>; // date = AAAA-MM-DD en Europe/Madrid
+  collect(ctx: { city: CityConfig; date: string; http: HttpClient }): Promise<Item[]>; // date = AAAA-MM-DD en Europe/Madrid; http, compartido por toda la ejecución
 }
 
 interface Item {

@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "astro": "^7.3.3",
+    "cheerio": "^1.2.0",
+    "fast-xml-parser": "^5.11.2",
     "gray-matter": "^4.0.3",
     "luxon": "^3.7.2",
     "remark-gfm": "^4.0.1",

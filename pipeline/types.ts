@@ -2,6 +2,7 @@
  * Contratos del motor. Aquí no hay ninguna ciudad: el motor solo sabe que
  * recibe una `CityConfig` y actúa según lo que diga.
  */
+import type { HttpClient } from './lib/http.ts';
 
 export interface SectionDef {
   /** 'tiempo', 'agenda', 'aceite'… Único dentro de la ciudad. */
@@ -39,6 +40,12 @@ export interface CollectContext {
   city: CityConfig;
   /** AAAA-MM-DD en Europe/Madrid. */
   date: string;
+  /**
+   * Un solo cliente para toda la ejecución, compartido por todos los
+   * colectores: así «una petición por página y ejecución» (regla 6) se cumple
+   * también cuando dos colectores leen la misma URL.
+   */
+  http: HttpClient;
 }
 
 export interface Collector {
