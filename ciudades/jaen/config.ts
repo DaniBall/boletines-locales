@@ -54,6 +54,13 @@ export const jaen: CityConfig = {
       section: 'te_afecta',
       includePaths: ['/jaen/jaen/'],
     }),
+    // Viva Jaén vive ahora en Andalucía Información. De sus feeds por sección,
+    // solo el local: los demás son lentos y más provinciales.
+    rssCollector({
+      id: 'rss-viva-jaen',
+      url: 'https://www.andaluciainformacion.es/rss/jaen-local/',
+      section: 'te_afecta',
+    }),
     // Sin RSS, pero con sitemap de noticias. No trae resumen; la ruta separa la
     // capital (/jaen/) de la provincia, la opinión y los deportes.
     newsSitemapCollector({

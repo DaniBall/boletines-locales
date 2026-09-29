@@ -359,7 +359,7 @@ Fuentes propias (inventario inicial por verificar):
 | Agenda | Universidad de Jaén, Teatro Infanta Leonor, Teatro Darymelia, Auditorio de la Alameda | HTML o RSS | Programación |
 | Movilidad | Ayuntamiento (cortes y obras) | HTML o RSS | Lo que la Policía Local publica solo en redes sociales queda fuera |
 | Movilidad | DGT | XML | Accesos A-44 y A-316 |
-| Noticias | Hora Jaén, Ideal Jaén (ruta `/jaen/jaen/`) y Diario JAÉN (ruta `/jaen/`) | RSS y sitemap de noticias | **Verificadas el 29-09-2026 y en la config.** Diario JAÉN no tiene RSS: se lee su sitemap de noticias, sin resumen. Descartadas: Jaén Hoy (su RSS es solo opinión) y noticiasdejaen.es (sin feed). Pendientes de red: Viva Jaén (ahora en `andaluciainformacion.es`) y La Contra de Jaén (redirige a su dominio sin `www`) |
+| Noticias | Hora Jaén, Ideal Jaén (ruta `/jaen/jaen/`), Viva Jaén (feed `jaen-local` de `andaluciainformacion.es`) y Diario JAÉN (ruta `/jaen/`) | RSS y sitemap de noticias | **Verificadas el 29 y 30-09-2026 y en la config.** Diario JAÉN no tiene RSS: se lee su sitemap de noticias, sin resumen. Descartadas: Jaén Hoy (su RSS es solo opinión), noticiasdejaen.es (sin feed) y La Contra de Jaén (ahora `lacontradejaen.eldiario.es`: sin RSS propio, fuera del sitemap de noticias de elDiario.es y con un sitemap de últimas noticias sin titulares; solo se podría leyendo el HTML de cada artículo) |
 | Farmacias | Colegio Oficial de Farmacéuticos de Jaén | HTML | Investigar el formato |
 | Carburantes | API del Ministerio | JSON | **Verificada el 30-09-2026 y en la config**: IDMunicipio 3543 |
 | Aceite | Poolred o Infaoliva | HTML | Revisar condiciones de uso; dato del día anterior |
