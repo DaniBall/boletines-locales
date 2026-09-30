@@ -50,6 +50,14 @@ export interface HttpClientOptions {
   fetchImpl?: typeof fetch;
 }
 
+export interface RequestOptions {
+  /**
+   * Cabeceras extra, como la clave de una API. No forman parte de la clave de
+   * caché: van aquí y no en la URL para que no acaben en disco ni en los logs.
+   */
+  headers?: Readonly<Record<string, string>>;
+}
+
 interface CacheEntry {
   url: string;
   etag?: string;
@@ -90,18 +98,18 @@ export class HttpClient {
   }
 
   /** Texto de una página, decodificado según su cabecera. */
-  get(url: string): Promise<HttpResponse> {
+  get(url: string, options: RequestOptions = {}): Promise<HttpResponse> {
     const existing = this.done.get(url);
     if (existing) return existing;
 
-    const pending = this.request(url);
+    const pending = this.request(url, options);
     this.done.set(url, pending);
     return pending;
   }
 
   /** Como `get`, pero devuelve el JSON ya parseado. */
-  async getJson<T>(url: string): Promise<T> {
-    const response = await this.get(url);
+  async getJson<T>(url: string, options: RequestOptions = {}): Promise<T> {
+    const response = await this.get(url, options);
     try {
       return JSON.parse(response.body) as T;
     } catch (error) {
@@ -113,7 +121,7 @@ export class HttpClient {
     }
   }
 
-  private async request(url: string): Promise<HttpResponse> {
+  private async request(url: string, options: RequestOptions): Promise<HttpResponse> {
     if (this.respectRobots && !(await this.isAllowed(url))) {
       throw new HttpError('El robots.txt de la fuente no permite esta ruta.', url);
     }
@@ -124,7 +132,7 @@ export class HttpClient {
     for (let attempt = 0; attempt <= this.retries; attempt += 1) {
       if (attempt > 0) await delay(this.retryDelayMs);
       try {
-        return await this.attempt(url, cached);
+        return await this.attempt(url, cached, options);
       } catch (error) {
         lastError = error;
         // Un 404 o un 403 no mejoran por insistir.
@@ -143,8 +151,12 @@ export class HttpClient {
       : new HttpError(`Falló la petición: ${String(lastError)}`, url);
   }
 
-  private async attempt(url: string, cached: CacheEntry | undefined): Promise<HttpResponse> {
-    const headers: Record<string, string> = { 'user-agent': this.userAgent };
+  private async attempt(
+    url: string,
+    cached: CacheEntry | undefined,
+    options: RequestOptions,
+  ): Promise<HttpResponse> {
+    const headers: Record<string, string> = { ...options.headers, 'user-agent': this.userAgent };
     if (cached?.etag) headers['if-none-match'] = cached.etag;
     if (cached?.lastModified) headers['if-modified-since'] = cached.lastModified;
 

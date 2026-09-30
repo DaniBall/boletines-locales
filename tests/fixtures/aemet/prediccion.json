@@ -1,0 +1,86 @@
+[
+  {
+    "origen": {
+      "productor": "Agencia Estatal de Meteorología - AEMET. Gobierno de España",
+      "web": "https://www.aemet.es",
+      "enlace": "https://www.aemet.es/es/eltiempo/prediccion/municipios/villa-prueba-id00000",
+      "language": "es",
+      "copyright": "© AEMET. Autorizado el uso de la información y su reproducción citando a AEMET como autora de la misma.",
+      "notaLegal": "https://www.aemet.es/es/nota_legal"
+    },
+    "elaborado": "2026-09-30T05:42:11",
+    "nombre": "Villa Prueba",
+    "provincia": "Provincia Prueba",
+    "prediccion": {
+      "dia": [
+        {
+          "probPrecipitacion": [
+            { "value": 40, "periodo": "00-24" },
+            { "value": 10, "periodo": "00-12" },
+            { "value": 40, "periodo": "12-24" },
+            { "value": 0, "periodo": "00-06" },
+            { "value": 10, "periodo": "06-12" },
+            { "value": 40, "periodo": "12-18" },
+            { "value": 20, "periodo": "18-24" }
+          ],
+          "cotaNieveProv": [{ "value": "", "periodo": "00-24" }],
+          "estadoCielo": [
+            { "value": "", "periodo": "00-24", "descripcion": "" },
+            { "value": "13", "periodo": "00-12", "descripcion": "Intervalos nubosos" },
+            { "value": "43", "periodo": "12-24", "descripcion": "Intervalos nubosos con lluvia escasa" },
+            { "value": "12", "periodo": "00-06", "descripcion": "Poco nuboso" },
+            { "value": "13", "periodo": "06-12", "descripcion": "Intervalos nubosos" },
+            { "value": "43", "periodo": "12-18", "descripcion": "Intervalos nubosos con lluvia escasa" },
+            { "value": "12", "periodo": "18-24", "descripcion": "Poco nuboso" }
+          ],
+          "viento": [
+            { "direccion": "O", "velocidad": 25, "periodo": "00-24" },
+            { "direccion": "C", "velocidad": 0, "periodo": "00-12" },
+            { "direccion": "O", "velocidad": 25, "periodo": "12-24" }
+          ],
+          "rachaMax": [
+            { "value": "45", "periodo": "00-24" },
+            { "value": "", "periodo": "00-12" },
+            { "value": "45", "periodo": "12-24" }
+          ],
+          "temperatura": {
+            "maxima": 27,
+            "minima": 15,
+            "dato": [
+              { "value": 17, "hora": 6 },
+              { "value": 25, "hora": 12 },
+              { "value": 24, "hora": 18 },
+              { "value": 18, "hora": 24 }
+            ]
+          },
+          "sensTermica": { "maxima": 27, "minima": 15, "dato": [] },
+          "humedadRelativa": { "maxima": 80, "minima": 35, "dato": [] },
+          "uvMax": 5,
+          "fecha": "2026-09-30T00:00:00"
+        },
+        {
+          "probPrecipitacion": [{ "value": 0, "periodo": "00-24" }],
+          "cotaNieveProv": [{ "value": "", "periodo": "00-24" }],
+          "estadoCielo": [{ "value": "11", "periodo": "00-24", "descripcion": "Despejado" }],
+          "viento": [{ "direccion": "C", "velocidad": 5, "periodo": "00-24" }],
+          "rachaMax": [{ "value": "", "periodo": "00-24" }],
+          "temperatura": { "maxima": 29, "minima": 14, "dato": [] },
+          "sensTermica": { "maxima": 29, "minima": 14, "dato": [] },
+          "humedadRelativa": { "maxima": 70, "minima": 30, "dato": [] },
+          "uvMax": 6,
+          "fecha": "2026-10-01T00:00:00"
+        },
+        {
+          "probPrecipitacion": [{ "value": "", "periodo": "00-24" }],
+          "estadoCielo": [{ "value": "", "periodo": "00-24", "descripcion": "" }],
+          "viento": [{ "direccion": "", "velocidad": "", "periodo": "00-24" }],
+          "rachaMax": [{ "value": "", "periodo": "00-24" }],
+          "temperatura": { "maxima": 30, "minima": 16, "dato": [] },
+          "fecha": "2026-10-02T00:00:00"
+        }
+      ]
+    },
+    "id": "00000",
+    "version": "1.0"
+  }
+]

@@ -117,7 +117,7 @@ Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la 
 **Orden de trabajo: primero pruebas, después el servidor.**
 
 1. `npm run edicion` de punta a punta, sin IA. ✅
-2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno).
+2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno). Hecho con fixture; falta la prueba real.
 3. `draft` con Claude (con `ANTHROPIC_API_KEY` como variable de entorno).
 4. Panel de revisión en local (`npm run panel`): ver, editar y aprobar.
 5. Una o dos semanas de ensayo sin publicar.
@@ -202,7 +202,7 @@ Lo que hace el editor, una vez:
 ### Fase 1: MVP de Jaén (salir en su Canal)
 
 - [x] `pipeline/lib/http`: timeout, reintento, caché, `robots.txt` y User-Agent.
-- [ ] Colectores genéricos con fixture y test: tiempo (AEMET), carburantes y RSS.
+- [x] Colectores genéricos con fixture y test: tiempo (AEMET), carburantes y RSS. (AEMET sigue su especificación actual con una fixture inventada; falta probarlo con la clave de verdad.)
 - [ ] Colectores propios de Jaén para la agenda (Ayuntamiento y una fuente más), con fixture y test, y 3–4 feeds RSS locales en su config.
 - [x] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
 - [x] `render` y `npm run edicion` de punta a punta sin IA: saludo, secciones en el orden de la ciudad, plantillas deterministas, reparto del viernes a «Este finde», número correlativo e informe de revisión en `.cache/revision/`.

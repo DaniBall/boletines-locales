@@ -1,3 +1,4 @@
+import { aemetCollector } from '../../pipeline/collectors/aemet.ts';
 import { fuelCollector } from '../../pipeline/collectors/carburantes.ts';
 import { rssCollector } from '../../pipeline/collectors/rss.ts';
 import { newsSitemapCollector } from '../../pipeline/collectors/sitemap-noticias.ts';
@@ -42,6 +43,8 @@ export const jaen: CityConfig = {
   // permite y pasan por el colector sin tocar nada. El orden importa: ante un
   // duplicado gana el primero, así que van delante los que traen resumen.
   collectors: [
+    // El tiempo; necesita AEMET_API_KEY en el entorno.
+    aemetCollector(),
     // Diez noticias locales, todas con resumen.
     rssCollector({
       id: 'rss-hora-jaen',
