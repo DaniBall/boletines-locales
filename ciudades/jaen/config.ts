@@ -45,12 +45,16 @@ export const jaen: CityConfig = {
     // Diez noticias locales, todas con resumen.
     rssCollector({
       id: 'rss-hora-jaen',
+      name: 'Hora Jaén',
+      homepage: 'https://www.horajaen.com/',
       url: 'https://www.horajaen.com/feed/',
       section: 'te_afecta',
     }),
     // Mezcla capital y provincia; la ruta dice cuál es cuál.
     rssCollector({
       id: 'rss-ideal-jaen',
+      name: 'Ideal Jaén',
+      homepage: 'https://www.ideal.es/jaen/',
       url: 'https://www.ideal.es/rss/2.0/?section=jaen',
       section: 'te_afecta',
       includePaths: ['/jaen/jaen/'],
@@ -59,6 +63,8 @@ export const jaen: CityConfig = {
     // solo el local: los demás son lentos y más provinciales.
     rssCollector({
       id: 'rss-viva-jaen',
+      name: 'Viva Jaén',
+      homepage: 'https://www.andaluciainformacion.es/jaen/',
       url: 'https://www.andaluciainformacion.es/rss/jaen-local/',
       section: 'te_afecta',
     }),
@@ -67,6 +73,8 @@ export const jaen: CityConfig = {
     // ISO-8859-1 declarado solo dentro del XML.
     rssCollector({
       id: 'ayto-jaen-noticias',
+      name: 'Ayuntamiento de Jaén',
+      homepage: 'https://www.aytojaen.es/',
       url: 'https://www.aytojaen.es/portal/p_26_RSS_Noticias.jsp?codbusqueda=2&language=es',
       section: 'te_afecta',
     }),
@@ -74,6 +82,8 @@ export const jaen: CityConfig = {
     // capital (/jaen/) de la provincia, la opinión y los deportes.
     newsSitemapCollector({
       id: 'sitemap-diario-jaen',
+      name: 'Diario JAÉN',
+      homepage: 'https://www.diariojaen.es/',
       url: 'https://www.diariojaen.es/sitemapforgoogle.xml',
       section: 'te_afecta',
       includePaths: ['/jaen/'],

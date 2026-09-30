@@ -51,6 +51,10 @@ export interface CollectContext {
 export interface Collector {
   /** 'aemet', 'ayto-agenda', 'rss-diario-jaen'… */
   id: string;
+  /** Como se cita en la edición: 'Hora Jaén'. Sin él, se usa el id. */
+  name?: string;
+  /** Portada de la fuente, para la lista de fuentes de la edición. */
+  homepage?: string;
   /** Id de una SectionDef de la ciudad. */
   section: string;
   collect(ctx: CollectContext): Promise<Item[]>;

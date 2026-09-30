@@ -125,7 +125,7 @@ export function select(
   const selected: Item[] = [];
   // Se respeta el orden de secciones de la ciudad, que es el de la edición.
   for (const seccion of city.sections) {
-    const lista = porSeccion.get(seccion.id) ?? [];
+    const lista = alternarFuentes(porSeccion.get(seccion.id) ?? []);
     selected.push(...lista.slice(0, maxPerSection));
     for (const sobrante of lista.slice(maxPerSection)) {
       discarded.push({
@@ -191,3 +191,27 @@ function fechaDelItem(item: Item): string | undefined {
 
 /** Días hacia atrás que mira `select` para no repetir. Lo fija la config. */
 export const DEDUPE_WINDOW_DAYS = limits.dedupeWindowDays;
+
+/**
+ * Reparte el tope entre fuentes: primero lo primero de cada una, luego lo
+ * segundo… Así una fuente que publica mucho no copa la sección. Dentro de cada
+ * fuente se respeta su orden.
+ */
+function alternarFuentes(items: readonly Item[]): Item[] {
+  const porFuente = new Map<string, Item[]>();
+  for (const item of items) {
+    const lista = porFuente.get(item.source) ?? [];
+    lista.push(item);
+    porFuente.set(item.source, lista);
+  }
+
+  const colas = [...porFuente.values()];
+  const resultado: Item[] = [];
+  for (let ronda = 0; resultado.length < items.length; ronda += 1) {
+    for (const cola of colas) {
+      const siguiente = cola[ronda];
+      if (siguiente !== undefined) resultado.push(siguiente);
+    }
+  }
+  return resultado;
+}

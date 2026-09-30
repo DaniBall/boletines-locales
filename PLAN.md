@@ -194,6 +194,7 @@ Lo que hace el editor, una vez:
 - [ ] Colectores genéricos con fixture y test: tiempo (AEMET), carburantes y RSS.
 - [ ] Colectores propios de Jaén para la agenda (Ayuntamiento y una fuente más), con fixture y test, y 3–4 feeds RSS locales en su config.
 - [x] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
+- [x] `render` y `npm run edicion` de punta a punta sin IA: saludo, secciones en el orden de la ciudad, plantillas deterministas, reparto del viernes a «Este finde», número correlativo e informe de revisión en `.cache/revision/`.
 - [ ] `draft` con structured outputs y prompts versionados (comunes y de la ciudad).
 - [ ] `validate` y sección «Avisos». (El paso `validate` está hecho; falta pintar sus avisos en el PR, que llega con `borrador.yml`.)
 - [ ] Workflow `borrador.yml` (cron y ejecución manual con `--ciudad` y `--fecha`), con matriz de ciudades, que abre el PR descrito en la sección 5. De momento, solo `jaen` en la matriz.

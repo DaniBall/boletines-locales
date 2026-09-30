@@ -28,6 +28,12 @@ export function longDate(date: IsoDate): string {
   return parseIsoDate(date).toFormat("cccc d 'de' LLLL 'de' yyyy");
 }
 
+/** «Miércoles 30 de septiembre», para el saludo: sin año y con mayúscula. */
+export function greetingDate(date: IsoDate): string {
+  const texto = parseIsoDate(date).toFormat("cccc d 'de' LLLL");
+  return texto.charAt(0).toLocaleUpperCase(LOCALE) + texto.slice(1);
+}
+
 /** «lunes», en minúsculas. */
 export function weekdayName(date: IsoDate): string {
   return parseIsoDate(date).toFormat('cccc');

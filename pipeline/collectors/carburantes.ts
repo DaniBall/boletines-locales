@@ -54,6 +54,7 @@ export function fuelCollector(options: FuelCollectorOptions = {}): Collector {
   return {
     id,
     section,
+    name: 'Ministerio: precios de carburantes',
     async collect(ctx) {
       const municipio = ctx.city.fuelMunicipalityId;
       // Sin municipio configurado no hay nada que pedir: la sección se omite.
