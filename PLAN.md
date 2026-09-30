@@ -100,17 +100,28 @@ El primer paso de cada colector es confirmar que la fuente existe, su formato y 
 
 ## 5. Flujo diario
 
+**Arquitectura (decidida en septiembre de 2026).** Un VPS propio ejecuta el pipeline y sirve un panel de revisión web en un subdominio. GitHub sigue siendo la fuente de verdad del código y de las ediciones publicadas, y Cloudflare sirve las webs. GitHub Actions queda solo para el CI: su cron se retrasa demasiado para una edición que tiene que estar a primera hora.
+
 **Modo mañana (por defecto)**
 
-1. Cron `17 4 * * 1-5` (UTC, es decir, 06:17 en verano y 05:17 en invierno): para cada ciudad de la matriz, `collect`, `select`, `draft`, `validate` y `render`.
-2. El workflow abre un PR por ciudad, `edicion/<id>/AAAA-MM-DD`, con la vista previa de WhatsApp en un bloque de código, la tabla de salud de las fuentes, los avisos del validador y lo que se ha descartado.
-3. El editor lo revisa desde la app de GitHub y, si hace falta, edita el `.md` en el propio PR.
-4. Merge → Cloudflare despliega la web de esa ciudad en uno o dos minutos.
-5. El editor abre la edición, pulsa «Copiar para WhatsApp» y la pega en el Canal de esa ciudad hacia las 07:30.
+1. Un timer de systemd en el VPS lanza, para cada ciudad activa, `collect`, `select`, `draft`, `validate` y `render`. La hora es local (`Europe/Madrid`) y puntual, sin el retraso del cron de Actions.
+2. El borrador se queda en el VPS, sin commit, junto con su informe de revisión: vista previa de WhatsApp, salud de las fuentes, avisos del validador y lo descartado. El editor recibe un aviso con el enlace al panel.
+3. El editor revisa en el panel desde el móvil. Puede editar el texto, ver los avisos y los descartes, y regenerar el borrador.
+4. Aprobar = commit de `content/<id>/ediciones/AAAA-MM-DD.md` en `main` con `estado: publicada`. Cloudflare despliega la web de esa ciudad en uno o dos minutos.
+5. El editor pulsa «Copiar para WhatsApp» y lo pega en el Canal de esa ciudad hacia las 07:30.
 
-**Modo víspera:** cron `17 19 * * 0-4` (UTC), que genera la edición del día siguiente para revisarla por la noche. Pegarla en el Canal sigue siendo cosa de la mañana, salvo con WAHA (fase 1b).
+**Modo víspera:** la misma ejecución por la noche, para la edición del día siguiente. Pegarla en el Canal sigue siendo cosa de la mañana, salvo con WAHA (fase 1b).
 
-Sin merge no se publica nada. Cada ciudad añade una revisión diaria: el lanzamiento escalonado, el modo víspera, WAHA o un colaborador local por ciudad lo alivian.
+Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la carga se alivia con el lanzamiento escalonado, el modo víspera, WAHA o un colaborador local por ciudad con acceso al panel.
+
+**Orden de trabajo: primero pruebas, después el servidor.**
+
+1. `npm run edicion` de punta a punta, sin IA. ✅
+2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno).
+3. `draft` con Claude (con `ANTHROPIC_API_KEY` como variable de entorno).
+4. Panel de revisión en local (`npm run panel`): ver, editar y aprobar.
+5. Una o dos semanas de ensayo sin publicar.
+6. VPS, dominio, control de acceso al panel, timer y avisos al editor.
 
 ## 6. Redacción con Claude
 
@@ -123,7 +134,7 @@ type Entrada = { item_id: string; titulo: string; texto: string }; // sin URLs e
 type Borrador = {
   titular: string; // una frase para el saludo
   secciones: Record<string, Entrada[]>; // solo las secciones que escribe la IA en esa ciudad
-  descartes: { item_id: string; motivo: string }[]; // se muestran en el PR
+  descartes: { item_id: string; motivo: string }[]; // se muestran en el panel
 };
 ```
 
@@ -196,8 +207,9 @@ Lo que hace el editor, una vez:
 - [x] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
 - [x] `render` y `npm run edicion` de punta a punta sin IA: saludo, secciones en el orden de la ciudad, plantillas deterministas, reparto del viernes a «Este finde», número correlativo e informe de revisión en `.cache/revision/`.
 - [ ] `draft` con structured outputs y prompts versionados (comunes y de la ciudad).
-- [ ] `validate` y sección «Avisos». (El paso `validate` está hecho; falta pintar sus avisos en el PR, que llega con `borrador.yml`.)
-- [ ] Workflow `borrador.yml` (cron y ejecución manual con `--ciudad` y `--fecha`), con matriz de ciudades, que abre el PR descrito en la sección 5. De momento, solo `jaen` en la matriz.
+- [ ] `validate` y sección «Avisos». (El paso `validate` está hecho y sus avisos van al frontmatter y al informe de revisión; falta mostrarlos en el panel.)
+- [ ] Panel de revisión en local (`npm run panel`): lista de borradores por ciudad, vista previa de la web y de WhatsApp, edición del Markdown, avisos, descartes, regenerar y aprobar (commit en `main`).
+- [ ] (Editor, guiado por Claude Code) VPS: pipeline con un timer de systemd por ciudad, panel en un subdominio con control de acceso, HTTPS, avisos al editor y copia de seguridad de los borradores. Los detalles pendientes están en «Pendiente de decidir» de `CLAUDE.md`.
 - [ ] Página de edición con copiar y compartir, archivo y RSS.
 - [ ] Landing con la edición de hoy y el botón «Seguir el canal».
 - [ ] Páginas legales con huecos para los datos del titular.
@@ -213,7 +225,7 @@ Esta lista se repite para cada ciudad:
 - Toque local en `ciudades/<id>/prompts/`.
 - Identidad y web, con su dominio.
 - (Editor) Canal de la ciudad (desde el mismo número o desde uno propio), con segundo admin y la URL en la config.
-- Añadir la ciudad a la matriz de `borrador.yml`.
+- Añadir la ciudad a las ciudades activas del timer del VPS.
 - Una semana de ensayo sin publicar. Después, lanzamiento.
 - Revisión de la arquitectura: si hubo que tocar el motor, anotar por qué y generalizarlo para la siguiente ciudad.
 
@@ -259,11 +271,11 @@ Tarifas en España (agosto de 2026): 0,0509 € por mensaje de marketing entrega
 | Concepto | Fase 1 | Fase 2 |
 |---|---|---|
 | Claude API (Sonnet 5: 2 $ por millón de tokens de entrada y 10 $ de salida) | ≈ 1–2 $/mes | igual |
-| GitHub Actions | 0 € (repo público, o dentro de los minutos gratuitos si es privado) | igual |
+| GitHub Actions (solo CI) | 0 € (repo público, o dentro de los minutos gratuitos si es privado) | igual |
 | Cloudflare (web) | 0 € | Worker + D1 compartidos: gratis o pocos euros |
 | Dominio | unos 10–15 €/año | igual |
 | WhatsApp | 0 € (Canal) | ≈ 1,12 € por suscriptor y mes (22 envíos × 0,0509 €) |
-| Servidor | 0 € (VPS pequeño compartido solo si hay WAHA) | igual |
+| Servidor | VPS pequeño, compartido por todas las ciudades (pipeline, panel y, si llega, WAHA): unos 5 €/mes en total | igual |
 
 ## 10. Financiación
 
@@ -329,7 +341,9 @@ Los clientes concretos de cada ciudad están en su ficha.
 |---|---|
 | Una fuente cambia su HTML | Fixtures, issue automático y commit `:alien:` |
 | Alucinaciones | Cifras por código, validador y revisión humana |
-| Todo depende de una persona cada mañana, y cada ciudad suma una revisión | Lanzamiento escalonado, modo víspera, WAHA o un colaborador local por ciudad con permisos en el repo |
+| Todo depende de una persona cada mañana, y cada ciudad suma una revisión | Lanzamiento escalonado, modo víspera, WAHA o un colaborador local por ciudad con acceso al panel |
+| El VPS se cae o se pierde | El código y lo publicado viven en GitHub; en el VPS solo hay borradores y cachés. Reinstalación documentada, copia de los borradores y aviso si a la hora prevista no hay borrador. Mientras tanto, `npm run edicion` en local |
+| El panel queda expuesto en internet | Control de acceso delante (por ejemplo, Cloudflare Access), HTTPS y un token de GitHub con permiso solo sobre este repo |
 | Una ciudad obliga a tocar el motor | Regla 8 de `CLAUDE.md` y revisión de la arquitectura al lanzar cada ciudad |
 | Choque de marca con la red de Logronews | Identidad propia, o proponerles colaborar |
 | Competencia directa en Vitoria-Gasteiz (GasteizBerri ya ofrece servicios en su web y la red de Logronews está al lado) | Diferenciarse por el formato (llega solo, corto y a primera hora) y por el tono; valorar adelantar su lanzamiento |
