@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "edicion": "tsx scripts/cli.ts edicion",
     "fuentes": "tsx scripts/cli.ts fuentes",
-    "whatsapp": "tsx scripts/cli.ts whatsapp"
+    "whatsapp": "tsx scripts/cli.ts whatsapp",
+    "panel": "tsx panel/main.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

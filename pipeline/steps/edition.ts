@@ -79,7 +79,10 @@ export async function generateEdition(
     ...(sinIa === undefined ? [] : [sinIa]),
     ...health
       .filter((fuente) => fuente.status === 'error')
-      .map((fuente) => `${fuente.id}: ${fuente.error ?? 'error'}; su sección va sin esa fuente.`),
+      .map(
+        (fuente) =>
+          `${fuente.id}: ${(fuente.error ?? 'error').replace(/\.$/, '')}; su sección va sin esa fuente.`,
+      ),
     ...errors.map((issue) => `Quitado del borrador: ${issue.message}`),
     ...warnings.map((issue) => issue.message),
   ];

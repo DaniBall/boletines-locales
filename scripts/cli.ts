@@ -2,17 +2,14 @@
 /**
  * CLI: une el motor (`pipeline/`) con las ciudades (`ciudades/`).
  */
-import { cargarPromptLocal, getCiudad, idsCiudades } from '../ciudades/index.ts';
-import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { http as httpConfig } from '../pipeline/config.ts';
-import { editionNumber, editionUrl, readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
-import { hasEdition, today } from '../pipeline/lib/fechas.ts';
+import { getCiudad, idsCiudades } from '../ciudades/index.ts';
+import { editionUrl, readEdition } from '../pipeline/lib/edicion.ts';
+import { today } from '../pipeline/lib/fechas.ts';
 import { HttpClient } from '../pipeline/lib/http.ts';
 import { renderWhatsapp } from '../pipeline/render/whatsapp.ts';
 import { collect, formatHealthTable } from '../pipeline/steps/collect.ts';
-import { createClaudeDrafter, loadStylePrompt } from '../pipeline/steps/draft.ts';
-import { generateEdition } from '../pipeline/steps/edition.ts';
+import { generarBorrador } from './borrador.ts';
 
 function parseArgs(argv: string[]): { command: string; flags: Map<string, string> } {
   const [command = 'ayuda', ...rest] = argv;
@@ -98,60 +95,22 @@ async function main(): Promise<number> {
   }
 }
 
-/** Genera la edición del día, la escribe y deja el informe para la revisión. */
+/** Genera el borrador del día y resume cómo ha ido. */
 async function edicion(
   ciudad: ReturnType<typeof getCiudad>,
   fecha: string,
   flags: Map<string, string>,
 ): Promise<number> {
-  const forzar = flags.has('forzar');
-  if (!hasEdition(fecha, ciudad.holidays) && !forzar) {
-    process.stderr.write(
-      `${fecha} no tiene edición en ${ciudad.name} (fin de semana o festivo). Usa --forzar para generarla igual.\n`,
-    );
-    return 1;
-  }
-
-  // Nunca se pisa una edición ya publicada sin pedirlo.
-  const existente = await readEdition(ciudad.id, fecha).catch(() => undefined);
-  if (existente?.frontmatter.estado === 'publicada' && !forzar) {
-    process.stderr.write(
-      `La edición de ${fecha} ya está publicada. Usa --forzar para regenerarla.\n`,
-    );
-    return 1;
-  }
-
-  // Sin clave o con --sin-ia, la edición sale igual, con los titulares para redactar a mano.
-  const conClave = (process.env.ANTHROPIC_API_KEY ?? '') !== '';
-  const conIa = conClave && !flags.has('sin-ia');
-  const { edition, report } = await generateEdition({
-    city: ciudad,
-    date: fecha,
-    http: new HttpClient(),
-    numero: await editionNumber(ciudad.id, fecha),
-    weekend: { from: 'agenda', to: 'finde' },
-    ...(conIa
-      ? {
-          draft: createClaudeDrafter({
-            style: await loadStylePrompt(),
-            ...(await cargarPromptLocal(ciudad.id).then((local) =>
-              local === undefined ? {} : { local },
-            )),
-          }),
-        }
-      : {
-          noDraftReason: flags.has('sin-ia')
-            ? 'Edición generada sin IA (--sin-ia).'
-            : 'Edición generada sin IA: falta ANTHROPIC_API_KEY en el entorno.',
-        }),
+  const resultado = await generarBorrador(ciudad, fecha, {
+    forzar: flags.has('forzar'),
+    sinIa: flags.has('sin-ia'),
   });
+  if (!resultado.ok) {
+    process.stderr.write(`${resultado.motivo}\n`);
+    return 1;
+  }
 
-  const archivo = await writeEdition(edition);
-  const informe = path.join(httpConfig.cacheDir, 'revision', ciudad.id, `${fecha}.json`);
-  await mkdir(path.dirname(informe), { recursive: true });
-  // El informe lleva titulares de terceros: va a la caché, fuera de git (regla 4).
-  await writeFile(informe, JSON.stringify(report, null, 2), 'utf8');
-
+  const { edition, report, archivo, informe } = resultado;
   const avisos = edition.frontmatter.avisos ?? [];
   process.stdout.write(
     [
@@ -164,7 +123,7 @@ async function edicion(
         ? 'Sin avisos.'
         : `Avisos:\n${avisos.map((aviso) => `  - ${aviso}`).join('\n')}`,
       '',
-      `Informe de revisión: ${informe}`,
+      `Informe de revisión: ${path.relative(process.cwd(), informe)}`,
       `Texto de WhatsApp: npm run whatsapp -- --ciudad ${ciudad.id} --fecha ${fecha}`,
       '',
     ].join('\n'),

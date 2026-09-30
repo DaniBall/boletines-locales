@@ -207,7 +207,7 @@ describe('generateEdition', () => {
     expect(edition.frontmatter.avisos).toEqual(
       expect.arrayContaining([
         'Edición generada sin IA.',
-        'roto: La fuente respondió 500.; su sección va sin esa fuente.',
+        'roto: La fuente respondió 500; su sección va sin esa fuente.',
       ]),
     );
     expect(report.whatsapp).toContain('https://ejemplo.invalid/ediciones/2026-09-30/');
