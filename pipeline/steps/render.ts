@@ -8,12 +8,14 @@
  */
 import { greetingDate, type IsoDate } from '../lib/fechas.ts';
 import { renderFuelLines } from '../render/carburantes.ts';
+import { renderWeatherLines } from '../render/tiempo.ts';
 import type { CityConfig, Draft, EditionFrontmatter, Item, SectionDef } from '../types.ts';
 
 /** Plantillas de las secciones deterministas, por id de sección. */
 export type SectionRenderer = (items: readonly Item[]) => string[];
 
 export const DEFAULT_RENDERERS: Readonly<Record<string, SectionRenderer>> = {
+  tiempo: renderWeatherLines,
   carburantes: renderFuelLines,
 };
 

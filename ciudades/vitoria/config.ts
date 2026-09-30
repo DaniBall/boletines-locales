@@ -1,3 +1,4 @@
+import { aemetCollector } from '../../pipeline/collectors/aemet.ts';
 import { fuelCollector } from '../../pipeline/collectors/carburantes.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
@@ -29,7 +30,7 @@ export const vitoria: CityConfig = {
     { id: 'anillo_verde', title: '🌳 Anillo Verde', writer: 'ai' },
   ],
 
-  collectors: [fuelCollector()],
+  collectors: [aemetCollector(), fuelCollector()],
 
   holidays: [],
 };

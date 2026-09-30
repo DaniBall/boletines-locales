@@ -65,6 +65,21 @@ describe('el cliente HTTP', () => {
     expect(recibido).toBe('Boletines locales (+hola@ejemplo.es)');
   });
 
+  it('manda las cabeceras extra, como la clave de una API, sin tocar la URL', async () => {
+    let clave: string | undefined;
+    let ruta: string | undefined;
+    handler = (req, res) => {
+      clave = req.headers.api_key as string | undefined;
+      ruta = req.url;
+      res.end('{}');
+    };
+
+    await cliente().getJson(`${base}/con-clave`, { headers: { api_key: 'secreta' } });
+
+    expect(clave).toBe('secreta');
+    expect(ruta).toBe('/con-clave');
+  });
+
   it('decodifica los acentos de una fuente en ISO-8859-15, como AEMET', async () => {
     handler = (_req, res) => {
       res.setHeader('content-type', 'text/plain; charset=ISO-8859-15');
