@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 /**
- * CLI: une el motor (`pipeline/`) con las ciudades (`ciudades/`). `edicion`
- * llega con el resto de la fase 1.
+ * CLI: une el motor (`pipeline/`) con las ciudades (`ciudades/`).
  */
 import { getCiudad, idsCiudades } from '../ciudades/index.ts';
-import { editionUrl, readEdition } from '../pipeline/lib/edicion.ts';
-import { today } from '../pipeline/lib/fechas.ts';
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { http as httpConfig } from '../pipeline/config.ts';
+import { editionNumber, editionUrl, readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
+import { hasEdition, today } from '../pipeline/lib/fechas.ts';
 import { HttpClient } from '../pipeline/lib/http.ts';
 import { renderWhatsapp } from '../pipeline/render/whatsapp.ts';
 import { collect, formatHealthTable } from '../pipeline/steps/collect.ts';
+import { generateEdition } from '../pipeline/steps/edition.ts';
 
 function parseArgs(argv: string[]): { command: string; flags: Map<string, string> } {
   const [command = 'ayuda', ...rest] = argv;
@@ -84,13 +87,70 @@ async function main(): Promise<number> {
     }
 
     case 'edicion':
-      process.stderr.write(`El comando «${command}» llega en la fase 1.\n`);
-      return 1;
+      return edicion(ciudad, fecha, flags);
 
     default:
       process.stdout.write(AYUDA);
       return 1;
   }
+}
+
+/** Genera la edición del día, la escribe y deja el informe para la revisión. */
+async function edicion(
+  ciudad: ReturnType<typeof getCiudad>,
+  fecha: string,
+  flags: Map<string, string>,
+): Promise<number> {
+  const forzar = flags.has('forzar');
+  if (!hasEdition(fecha, ciudad.holidays) && !forzar) {
+    process.stderr.write(
+      `${fecha} no tiene edición en ${ciudad.name} (fin de semana o festivo). Usa --forzar para generarla igual.\n`,
+    );
+    return 1;
+  }
+
+  // Nunca se pisa una edición ya publicada sin pedirlo.
+  const existente = await readEdition(ciudad.id, fecha).catch(() => undefined);
+  if (existente?.frontmatter.estado === 'publicada' && !forzar) {
+    process.stderr.write(
+      `La edición de ${fecha} ya está publicada. Usa --forzar para regenerarla.\n`,
+    );
+    return 1;
+  }
+
+  // La redacción con Claude llega en el siguiente paso; hasta entonces, sin IA.
+  const { edition, report } = await generateEdition({
+    city: ciudad,
+    date: fecha,
+    http: new HttpClient(),
+    numero: await editionNumber(ciudad.id, fecha),
+    weekend: { from: 'agenda', to: 'finde' },
+  });
+
+  const archivo = await writeEdition(edition);
+  const informe = path.join(httpConfig.cacheDir, 'revision', ciudad.id, `${fecha}.json`);
+  await mkdir(path.dirname(informe), { recursive: true });
+  // El informe lleva titulares de terceros: va a la caché, fuera de git (regla 4).
+  await writeFile(informe, JSON.stringify(report, null, 2), 'utf8');
+
+  const avisos = edition.frontmatter.avisos ?? [];
+  process.stdout.write(
+    [
+      `Edición nº ${String(edition.frontmatter.numero)} de ${ciudad.name} (${fecha}) → ${path.relative(process.cwd(), archivo)}`,
+      '',
+      formatHealthTable(report.health),
+      '',
+      `Descartados por select: ${String(report.discarded.length)}.`,
+      avisos.length === 0
+        ? 'Sin avisos.'
+        : `Avisos:\n${avisos.map((aviso) => `  - ${aviso}`).join('\n')}`,
+      '',
+      `Informe de revisión: ${informe}`,
+      `Texto de WhatsApp: npm run whatsapp -- --ciudad ${ciudad.id} --fecha ${fecha}`,
+      '',
+    ].join('\n'),
+  );
+  return 0;
 }
 
 main().then(

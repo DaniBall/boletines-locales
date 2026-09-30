@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
 import { limits, paths } from '../config.ts';
@@ -74,4 +74,40 @@ export async function publishedUrls(
   }
 
   return urls;
+}
+
+/**
+ * Número de la edición de ese día. Si ya existe (se regenera un borrador),
+ * conserva el suyo; si no, el siguiente al mayor que haya. Correlativo por
+ * ciudad, como pide el frontmatter.
+ */
+export async function editionNumber(
+  cityId: string,
+  date: IsoDate,
+  root = process.cwd(),
+): Promise<number> {
+  let archivos: string[];
+  try {
+    archivos = await readdir(editionsDir(cityId, root));
+  } catch {
+    return 1;
+  }
+
+  let maximo = 0;
+  for (const archivo of archivos) {
+    if (!/^\d{4}-\d{2}-\d{2}\.md$/.test(archivo)) continue;
+    const { frontmatter } = await readEdition(cityId, archivo.slice(0, 10), root);
+    if (frontmatter.fecha === date) return frontmatter.numero;
+    maximo = Math.max(maximo, frontmatter.numero);
+  }
+  return maximo + 1;
+}
+
+/** Escribe la edición en content/<ciudad>/ediciones/AAAA-MM-DD.md. */
+export async function writeEdition(edition: Edition, root = process.cwd()): Promise<string> {
+  const { ciudad, fecha } = edition.frontmatter;
+  const file = editionPath(ciudad, fecha, root);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, matter.stringify(`\n${edition.body}\n`, edition.frontmatter), 'utf8');
+  return file;
 }

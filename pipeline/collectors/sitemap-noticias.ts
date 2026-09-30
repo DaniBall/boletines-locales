@@ -25,6 +25,10 @@ import {
 } from './comun.ts';
 
 export interface NewsSitemapCollectorOptions extends PathFilter {
+  /** Como se cita en la edición: 'Hora Jaén'. */
+  name?: string;
+  /** Portada del medio, para la lista de fuentes. */
+  homepage?: string;
   /** 'sitemap-diario-jaen'. Es también el `source` de sus items. */
   id: string;
   url: string;
@@ -39,6 +43,8 @@ export function newsSitemapCollector(options: NewsSitemapCollectorOptions): Coll
   return {
     id: options.id,
     section: options.section,
+    ...(options.name === undefined ? {} : { name: options.name }),
+    ...(options.homepage === undefined ? {} : { homepage: options.homepage }),
     async collect(ctx) {
       const { body } = await ctx.http.get(options.url);
       return parseNewsSitemap(body, options);

@@ -22,6 +22,8 @@ export function agendaAyuntamientoJaen(): Collector {
   return {
     id: ID,
     section: 'agenda',
+    name: 'Ayuntamiento de Jaén',
+    homepage: 'https://www.aytojaen.es/',
     async collect(ctx) {
       const { body } = await ctx.http.get(AGENDA_SEMANA_URL);
       return parseAgenda(body);

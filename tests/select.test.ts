@@ -169,6 +169,23 @@ describe('select', () => {
     expect(discarded.filter((d) => d.reason === 'exceso')).toHaveLength(2);
   });
 
+  it('reparte el tope entre fuentes para que ninguna copie la sección', () => {
+    const titulares = [
+      'Abre la piscina cubierta',
+      'Suben los autobuses urbanos',
+      'Nuevo carril bici en la ronda',
+      'Cierra el mercado de abastos',
+    ];
+    const items = [
+      ...titulares.map((title, i) => item({ id: `grande-${String(i)}`, title, source: 'grande' })),
+      item({ id: 'chica-0', title: 'Poda de árboles en el parque', source: 'chica' }),
+    ];
+
+    const { selected } = select(items, ciudad, HOY, { maxPerSection: 3 });
+
+    expect(selected.map((i) => i.id)).toEqual(['grande-0', 'chica-0', 'grande-1']);
+  });
+
   it('devuelve las secciones en el orden de la edición, no en el de llegada', () => {
     const items = [
       item({ id: 'noticia', title: 'Una noticia', section: 'te_afecta' }),

@@ -20,6 +20,10 @@ import {
 } from './comun.ts';
 
 export interface RssCollectorOptions extends PathFilter {
+  /** Como se cita en la edición: 'Hora Jaén'. */
+  name?: string;
+  /** Portada del medio, para la lista de fuentes. */
+  homepage?: string;
   /** 'rss-diario-jaen'. Es también el `source` de sus items. */
   id: string;
   url: string;
@@ -37,6 +41,8 @@ export function rssCollector(options: RssCollectorOptions): Collector {
   return {
     id: options.id,
     section: options.section,
+    ...(options.name === undefined ? {} : { name: options.name }),
+    ...(options.homepage === undefined ? {} : { homepage: options.homepage }),
     async collect(ctx) {
       const { body } = await ctx.http.get(options.url);
       return parseFeed(body, options);
