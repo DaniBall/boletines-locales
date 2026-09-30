@@ -6,6 +6,7 @@
     "ciudades/**/*",
     "pipeline/**/*",
     "scripts/**/*",
+    "panel/**/*",
     "tests/**/*",
     "astro.config.ts",
     "vitest.config.ts",

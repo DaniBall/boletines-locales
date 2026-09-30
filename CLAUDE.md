@@ -56,7 +56,7 @@ Se inspira en el modelo Pamplonews/Logronews, pero no copia su nombre ni el patr
 │   ├── render/            # Markdown → texto de WhatsApp
 │   └── lib/               # http (timeout, caché, robots.txt), fechas, deduplicado
 ├── scripts/               # CLI (edicion, fuentes, whatsapp): une el motor y las ciudades
-├── panel/                 # panel de revisión (se crea en la fase 1): usa el motor y el registro
+├── panel/                 # panel de revisión: usa el motor, el registro y scripts/borrador.ts
 ├── src/                   # web Astro: la ciudad llega por CIUDAD y el registro
 ├── tests/                 # incluye fixtures/<id>/ con HTML y RSS guardados
 └── .github/workflows/     # ci.yml
@@ -116,7 +116,7 @@ npm run edicion -- --ciudad jaen --fecha 2026-09-21           # pipeline complet
 npm run edicion -- --ciudad leon --fecha 2026-09-21 --sin-ia  # sin llamar a Claude, para desarrollar gratis
 npm run fuentes -- --ciudad leon --fecha 2026-09-21           # tabla de salud de las fuentes
 npm run whatsapp -- --ciudad jaen --fecha 2026-09-21          # imprime el texto listo para pegar
-npm run panel                                                 # panel de revisión en local (se crea en la fase 1)
+npm run panel                                                 # panel de revisión en http://127.0.0.1:4322 (PANEL_GIT=off|commit|push)
 ```
 
 ## Reglas del pipeline (no negociables)

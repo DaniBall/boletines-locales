@@ -23,7 +23,13 @@ export default defineConfig(
     },
   },
   {
-    files: ['pipeline/**/*.ts', 'scripts/**/*.ts', 'ciudades/**/*.ts', 'tests/**/*.ts'],
+    files: [
+      'pipeline/**/*.ts',
+      'scripts/**/*.ts',
+      'panel/**/*.ts',
+      'ciudades/**/*.ts',
+      'tests/**/*.ts',
+    ],
     languageOptions: {
       globals: globals.node,
     },

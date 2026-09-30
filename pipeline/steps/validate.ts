@@ -178,13 +178,19 @@ function validarEntrada(
   }
 }
 
+/** Caracteres como los ve una persona: un emoji o una «ñ» cuentan uno. */
+export function messageLength(text: string): number {
+  return [...text].length;
+}
+
 /** Tope de caracteres del mensaje: menos de tres minutos de lectura. */
 export function validateWhatsapp(text: string): ValidationResult {
   const warnings: Issue[] = [];
-  if (text.length > limits.maxEditionChars) {
+  const largo = messageLength(text);
+  if (largo > limits.maxEditionChars) {
     warnings.push({
       code: 'edicion-larga',
-      message: `El mensaje tiene ${String(text.length)} caracteres y el tope es ${String(limits.maxEditionChars)}.`,
+      message: `El mensaje tiene ${String(largo)} caracteres y el tope es ${String(limits.maxEditionChars)}.`,
     });
   }
   return { errors: [], warnings };

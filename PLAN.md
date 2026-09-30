@@ -119,7 +119,7 @@ Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la 
 1. `npm run edicion` de punta a punta, sin IA. ✅
 2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno). Hecho con fixture; falta la prueba real.
 3. `draft` con Claude (con `ANTHROPIC_API_KEY` como variable de entorno). Hecho con un cliente simulado; falta la prueba real.
-4. Panel de revisión en local (`npm run panel`): ver, editar y aprobar.
+4. Panel de revisión en local (`npm run panel`): ver, editar y aprobar. Hecho: `PANEL_GIT=off|commit|push` decide qué hace «Aprobar» con git.
 5. Una o dos semanas de ensayo sin publicar.
 6. VPS, dominio, control de acceso al panel, timer y avisos al editor.
 
@@ -208,7 +208,7 @@ Lo que hace el editor, una vez:
 - [x] `render` y `npm run edicion` de punta a punta sin IA: saludo, secciones en el orden de la ciudad, plantillas deterministas, reparto del viernes a «Este finde», número correlativo e informe de revisión en `.cache/revision/`.
 - [x] `draft` con structured outputs y prompts versionados (comunes y de la ciudad). (Probado con un cliente simulado; falta la prueba real con `ANTHROPIC_API_KEY` y ajustar el prompt en el ensayo.)
 - [ ] `validate` y sección «Avisos». (El paso `validate` está hecho y sus avisos van al frontmatter y al informe de revisión; falta mostrarlos en el panel.)
-- [ ] Panel de revisión en local (`npm run panel`): lista de borradores por ciudad, vista previa de la web y de WhatsApp, edición del Markdown, avisos, descartes, regenerar y aprobar (commit en `main`).
+- [x] Panel de revisión en local (`npm run panel`): lista de borradores por ciudad, vista previa de la web y de WhatsApp, edición del Markdown, avisos, descartes, regenerar y aprobar (commit en `main`).
 - [ ] (Editor, guiado por Claude Code) VPS: pipeline con un timer de systemd por ciudad, panel en un subdominio con control de acceso, HTTPS, avisos al editor y copia de seguridad de los borradores. Los detalles pendientes están en «Pendiente de decidir» de `CLAUDE.md`.
 - [ ] Página de edición con copiar y compartir, archivo y RSS.
 - [ ] Landing con la edición de hoy y el botón «Seguir el canal».
