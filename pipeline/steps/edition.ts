@@ -25,6 +25,8 @@ export interface EditionInput {
   /** Qué sección de agenda pasa a cuál el viernes. */
   weekend?: WeekendRoute;
   draft?: DraftFn;
+  /** Por qué no hay `draft`, para los avisos. Por defecto, «Edición generada sin IA.». */
+  noDraftReason?: string;
   root?: string;
 }
 
@@ -36,6 +38,8 @@ export interface EditionReport {
   /** El texto de WhatsApp, tal cual saldría. */
   whatsapp: string;
   sinRedactar: string[];
+  /** Lo que Claude decidió no contar, y por qué. */
+  descartesIa: Draft['descartes'];
   /** Por qué no hubo redacción con Claude, si no la hubo. */
   sinIa?: string;
 }
@@ -59,7 +63,7 @@ export async function generateEdition(
   let errors: Issue[] = [];
   let warnings: Issue[] = [];
   if (input.draft === undefined) {
-    sinIa = 'Edición generada sin IA.';
+    sinIa = input.noDraftReason ?? 'Edición generada sin IA.';
   } else {
     try {
       const bruto = await input.draft({ city, date, items: selected });
@@ -119,6 +123,7 @@ export async function generateEdition(
       warnings: [...warnings, ...largo],
       whatsapp,
       sinRedactar: renderizada.sinRedactar,
+      descartesIa: draft?.descartes ?? [],
       ...(sinIa === undefined ? {} : { sinIa }),
     },
   };

@@ -3,6 +3,8 @@
  * a las ciudades por aquí y nunca importan una config suelta. `pipeline/` no
  * importa este archivo (regla 8, y una regla de lint lo impide).
  */
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { CityConfig } from '../pipeline/types.ts';
 import { jaen } from './jaen/config.ts';
 import { leon } from './leon/config.ts';
@@ -36,4 +38,13 @@ export function ciudadActual(): CityConfig {
     throw new Error(`Falta la variable CIUDAD. Ejemplo: CIUDAD=${idsCiudades[0]} npm run build.`);
   }
   return getCiudad(id);
+}
+
+/** El toque local de la guía de estilo (`ciudades/<id>/prompts/local.md`), si lo hay. */
+export async function cargarPromptLocal(id: string): Promise<string | undefined> {
+  try {
+    return await readFile(path.join(import.meta.dirname, id, 'prompts', 'local.md'), 'utf8');
+  } catch {
+    return undefined;
+  }
 }

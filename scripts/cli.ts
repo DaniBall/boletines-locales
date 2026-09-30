@@ -2,7 +2,7 @@
 /**
  * CLI: une el motor (`pipeline/`) con las ciudades (`ciudades/`).
  */
-import { getCiudad, idsCiudades } from '../ciudades/index.ts';
+import { cargarPromptLocal, getCiudad, idsCiudades } from '../ciudades/index.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { http as httpConfig } from '../pipeline/config.ts';
@@ -11,6 +11,7 @@ import { hasEdition, today } from '../pipeline/lib/fechas.ts';
 import { HttpClient } from '../pipeline/lib/http.ts';
 import { renderWhatsapp } from '../pipeline/render/whatsapp.ts';
 import { collect, formatHealthTable } from '../pipeline/steps/collect.ts';
+import { createClaudeDrafter, loadStylePrompt } from '../pipeline/steps/draft.ts';
 import { generateEdition } from '../pipeline/steps/edition.ts';
 
 function parseArgs(argv: string[]): { command: string; flags: Map<string, string> } {
@@ -34,7 +35,9 @@ function parseArgs(argv: string[]): { command: string; flags: Map<string, string
 const AYUDA = `Uso: npm run <comando> -- --ciudad <id> [--fecha AAAA-MM-DD]
 
   whatsapp   Imprime el texto listo para pegar en el Canal.
-  edicion    Genera la edición (fase 1).
+  edicion    Genera el borrador de la edición. Redacta con Claude si hay
+             ANTHROPIC_API_KEY; con --sin-ia, no. --forzar para festivos o para
+             regenerar una publicada.
   fuentes    Tabla de salud de las fuentes: pide a cada una y dice cómo está.
   ciudades   Lista las ciudades. Con --json, la matriz que consume el CI.
 
@@ -118,13 +121,29 @@ async function edicion(
     return 1;
   }
 
-  // La redacción con Claude llega en el siguiente paso; hasta entonces, sin IA.
+  // Sin clave o con --sin-ia, la edición sale igual, con los titulares para redactar a mano.
+  const conClave = (process.env.ANTHROPIC_API_KEY ?? '') !== '';
+  const conIa = conClave && !flags.has('sin-ia');
   const { edition, report } = await generateEdition({
     city: ciudad,
     date: fecha,
     http: new HttpClient(),
     numero: await editionNumber(ciudad.id, fecha),
     weekend: { from: 'agenda', to: 'finde' },
+    ...(conIa
+      ? {
+          draft: createClaudeDrafter({
+            style: await loadStylePrompt(),
+            ...(await cargarPromptLocal(ciudad.id).then((local) =>
+              local === undefined ? {} : { local },
+            )),
+          }),
+        }
+      : {
+          noDraftReason: flags.has('sin-ia')
+            ? 'Edición generada sin IA (--sin-ia).'
+            : 'Edición generada sin IA: falta ANTHROPIC_API_KEY en el entorno.',
+        }),
   });
 
   const archivo = await writeEdition(edition);
@@ -140,7 +159,7 @@ async function edicion(
       '',
       formatHealthTable(report.health),
       '',
-      `Descartados por select: ${String(report.discarded.length)}.`,
+      `Descartados por select: ${String(report.discarded.length)}. Descartados por Claude: ${String(report.descartesIa.length)}.`,
       avisos.length === 0
         ? 'Sin avisos.'
         : `Avisos:\n${avisos.map((aviso) => `  - ${aviso}`).join('\n')}`,
