@@ -13,6 +13,7 @@
  */
 import { z } from 'zod';
 import { toIsoDate } from '../lib/fechas.ts';
+import { HttpError, type HttpClient, type RequestOptions } from '../lib/http.ts';
 import { makeItemId } from '../lib/items.ts';
 import type { Collector, Item } from '../types.ts';
 
@@ -60,15 +61,34 @@ export function aemetCollector(options: AemetCollectorOptions = {}): Collector {
       const headers = { api_key: apiKey };
 
       const sobre = parseEnvelope(
-        await ctx.http.getJson<unknown>(
+        await pedir(
+          ctx.http,
           `${AEMET_API}/prediccion/especifica/municipio/diaria/${encodeURIComponent(ctx.city.aemetMunicipality)}`,
           { headers },
         ),
       );
-      const prediccion = await ctx.http.getJson<unknown>(sobre, { headers });
+      const prediccion = await pedir(ctx.http, sobre, { headers });
       return [parseDailyForecast(prediccion, ctx.date, { id, section })];
     },
   };
+}
+
+/**
+ * AEMET limita las peticiones por minuto y no manda `Retry-After`: con una
+ * ejecución diaria no debería pasar, y si pasa, que el aviso lo diga claro.
+ */
+async function pedir(http: HttpClient, url: string, options: RequestOptions): Promise<unknown> {
+  try {
+    return await http.getJson<unknown>(url, options);
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 429) {
+      throw new Error(
+        'AEMET: se ha alcanzado el límite de peticiones por minuto. Vuelve a intentarlo en un minuto.',
+        { cause: error },
+      );
+    }
+    throw error;
+  }
 }
 
 const sobreSchema = z.object({
@@ -120,7 +140,7 @@ const prediccionSchema = z
   )
   .min(1);
 
-/** El tramo que resume el día; si no está, el primero que tenga dato. */
+/** Para el cielo: el tramo que resume el día; si no está, el primero que tenga dato. */
 const TRAMOS_PREFERIDOS = ['00-24', '12-24', '06-12', '12-18'];
 
 function delDia<T extends { periodo?: string | undefined }>(
@@ -132,6 +152,23 @@ function delDia<T extends { periodo?: string | undefined }>(
     if (entrada !== undefined) return entrada;
   }
   return entradas.find(tieneDato);
+}
+
+/**
+ * Para lluvia, viento y rachas: la entrada con el valor más alto de todos los
+ * tramos. En el día en curso, AEMET deja a 0 o vacíos los tramos que ya han
+ * empezado (`00-24`, `00-12`) y el dato bueno está en los de seis horas; en los
+ * demás días, el `00-24` resume bien el día. El máximo sirve para los dos casos.
+ */
+function maximo<T>(
+  entradas: readonly T[],
+  valor: (entrada: T) => number | undefined,
+): T | undefined {
+  return entradas.reduce<T | undefined>((mejor, e) => {
+    const v = valor(e);
+    if (v === undefined) return mejor;
+    return mejor === undefined || v > (valor(mejor) ?? -Infinity) ? e : mejor;
+  }, undefined);
 }
 
 export function parseDailyForecast(
@@ -155,15 +192,15 @@ export function parseDailyForecast(
   const cielo = delDia(dia.estadoCielo, (e) => (e.descripcion ?? '').trim() !== '');
   if (cielo?.descripcion !== undefined) data.cielo = cielo.descripcion.trim();
 
-  const lluvia = delDia(dia.probPrecipitacion, (e) => e.value !== undefined)?.value;
+  const lluvia = maximo(dia.probPrecipitacion, (e) => e.value)?.value;
   if (lluvia !== undefined) data.lluvia = lluvia;
 
-  const viento = delDia(dia.viento, (e) => e.velocidad !== undefined);
+  const viento = maximo(dia.viento, (e) => e.velocidad);
   if (viento?.velocidad !== undefined) {
     data.viento = { direccion: (viento.direccion ?? '').trim(), velocidad: viento.velocidad };
   }
 
-  const racha = delDia(dia.rachaMax, (e) => e.value !== undefined)?.value;
+  const racha = maximo(dia.rachaMax, (e) => e.value)?.value;
   if (racha !== undefined) data.racha = racha;
 
   if (dia.uvMax !== undefined) data.uv = dia.uvMax;
