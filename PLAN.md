@@ -117,7 +117,7 @@ Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la 
 **Orden de trabajo: primero pruebas, después el servidor.**
 
 1. `npm run edicion` de punta a punta, sin IA. ✅
-2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno). Hecho con fixture; falta la prueba real.
+2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno). Hecho y probado con la clave.
 3. `draft` con Claude (con `ANTHROPIC_API_KEY` como variable de entorno). Hecho con un cliente simulado; falta la prueba real.
 4. Panel de revisión en local (`npm run panel`): ver, editar y aprobar. Hecho: `PANEL_GIT=off|commit|push` decide qué hace «Aprobar» con git.
 5. Una o dos semanas de ensayo sin publicar.
@@ -202,14 +202,14 @@ Lo que hace el editor, una vez:
 ### Fase 1: MVP de Jaén (salir en su Canal)
 
 - [x] `pipeline/lib/http`: timeout, reintento, caché, `robots.txt` y User-Agent.
-- [x] Colectores genéricos con fixture y test: tiempo (AEMET), carburantes y RSS. (AEMET sigue su especificación actual con una fixture inventada; falta probarlo con la clave de verdad.)
+- [x] Colectores genéricos con fixture y test: tiempo (AEMET), carburantes y RSS. (AEMET, probado con la clave el 01-10-2026 en las tres ciudades.)
 - [ ] Colectores propios de Jaén para la agenda (Ayuntamiento y una fuente más), con fixture y test, y 3–4 feeds RSS locales en su config.
 - [x] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
 - [x] `render` y `npm run edicion` de punta a punta sin IA: saludo, secciones en el orden de la ciudad, plantillas deterministas, reparto del viernes a «Este finde», número correlativo e informe de revisión en `.cache/revision/`.
 - [x] `draft` con structured outputs y prompts versionados (comunes y de la ciudad). (Probado con un cliente simulado; falta la prueba real con `ANTHROPIC_API_KEY` y ajustar el prompt en el ensayo.)
 - [ ] `validate` y sección «Avisos». (El paso `validate` está hecho y sus avisos van al frontmatter y al informe de revisión; falta mostrarlos en el panel.)
 - [x] Panel de revisión en local (`npm run panel`): lista de borradores por ciudad, vista previa de la web y de WhatsApp, edición del Markdown, avisos, descartes, regenerar y aprobar (commit en `main`).
-- [ ] (Editor, guiado por Claude Code) VPS: pipeline con un timer de systemd por ciudad, panel en un subdominio con control de acceso, HTTPS, avisos al editor y copia de seguridad de los borradores. Los detalles pendientes están en «Pendiente de decidir» de `CLAUDE.md`.
+- [ ] (Editor, guiado por Claude Code) VPS: pipeline con un timer de systemd por ciudad (separados al menos un minuto: AEMET corta con un 429 si se le hacen muchas peticiones seguidas y no dice cuándo volver), panel en un subdominio con control de acceso, HTTPS, avisos al editor y copia de seguridad de los borradores. Los detalles pendientes están en «Pendiente de decidir» de `CLAUDE.md`.
 - [ ] Página de edición con copiar y compartir, archivo y RSS.
 - [ ] Landing con la edición de hoy y el botón «Seguir el canal».
 - [ ] Páginas legales con huecos para los datos del titular.
@@ -367,7 +367,7 @@ Fuentes propias (inventario inicial por verificar):
 
 | Sección | Fuente candidata | Método probable | Notas |
 |---|---|---|---|
-| Tiempo | AEMET, municipio 23050 | API | Colector genérico |
+| Tiempo | AEMET, municipio 23050 | API | **Verificada el 01-10-2026 y en la config.** Colector genérico |
 | Agenda | Ayuntamiento de Jaén (agenda y notas de prensa) | HTML y RSS | **Verificada el 30-09-2026 y en la config.** Agenda: listado HTML «Actividades de la semana» (sin RSS). Notas de prensa: RSS no anunciado, en ISO-8859-1 declarado solo en el XML |
 | Agenda | EnJaen.es | HTML | Web privada: pedir permiso o solo enlazar |
 | Agenda | Diputación (Jaén Paraíso Interior) | HTML | Es provincial: filtrar a la capital |
@@ -394,7 +394,7 @@ Fuentes propias (inventario inicial por verificar):
 
 | Sección | Fuente candidata | Método probable | Notas |
 |---|---|---|---|
-| Tiempo | AEMET, municipio 24089 | API | Colector genérico |
+| Tiempo | AEMET, municipio 24089 | API | **Verificada el 01-10-2026 y en la config.** Colector genérico |
 | Agenda | Ayuntamiento de León (aytoleon.es, agenda y notas de prensa) | HTML o RSS | Fuente primaria |
 | Agenda | Leónjoven.net | HTML | Planes, cursos y convocatorias para jóvenes |
 | Agenda | Universidad de León, Auditorio Ciudad de León, Diputación | HTML o RSS | Programación |
@@ -420,7 +420,7 @@ Fuentes propias (inventario inicial por verificar):
 
 | Sección | Fuente candidata | Método probable | Notas |
 |---|---|---|---|
-| Tiempo | AEMET, municipio 01059 | API | Colector genérico. Euskalmet (Open Data Euskadi) como alternativa local, por verificar |
+| Tiempo | AEMET, municipio 01059 | API | **Verificada el 01-10-2026 y en la config.** Colector genérico. Euskalmet (Open Data Euskadi) como alternativa local, por verificar |
 | Agenda | Ayuntamiento de Vitoria-Gasteiz (vitoria-gasteiz.org) | HTML o datos abiertos | Fuente primaria |
 | Agenda | Red Municipal de Teatros, Artium, Fundación Vital, Diputación Foral (araba.eus) | HTML o RSS | Programación |
 | Movilidad | Ayuntamiento: calendario de incidencias de tráfico por obras y trabajos | HTML | Fuente primaria para los cortes en la ciudad |

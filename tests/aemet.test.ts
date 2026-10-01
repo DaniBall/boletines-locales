@@ -8,7 +8,7 @@ import {
   parseEnvelope,
   type WeatherData,
 } from '../pipeline/collectors/aemet.ts';
-import type { HttpClient, RequestOptions } from '../pipeline/lib/http.ts';
+import { HttpError, type HttpClient, type RequestOptions } from '../pipeline/lib/http.ts';
 import { renderWeatherLines } from '../pipeline/render/tiempo.ts';
 import type { CityConfig, Item } from '../pipeline/types.ts';
 
@@ -81,6 +81,17 @@ describe('parseDailyForecast', () => {
     });
   });
 
+  it('el día en curso: no se fía de los tramos ya pasados, que AEMET deja a 0', async () => {
+    const item = parseDailyForecast(await leer(), '2026-10-03', opciones);
+
+    expect(datosDe(item)).toMatchObject({
+      cielo: 'Cubierto con lluvia escasa',
+      lluvia: 100,
+      viento: { direccion: 'N', velocidad: 25 },
+      racha: 50,
+    });
+  });
+
   it('falla si la predicción no trae el día, en vez de publicar el de otro', async () => {
     await expect(async () =>
       parseDailyForecast(await leer(), '2026-10-09', opciones),
@@ -126,6 +137,16 @@ describe('aemetCollector', () => {
       { url: 'https://opendata.aemet.invalid/sh/1', clave: 'clave-de-prueba' },
     ]);
     expect(items).toHaveLength(1);
+  });
+
+  it('si AEMET corta por límite de uso, lo dice claro', async () => {
+    const http = {
+      getJson: () => Promise.reject(new HttpError('La fuente respondió 429.', 'x', 429)),
+    } as unknown as HttpClient;
+
+    await expect(
+      aemetCollector({ apiKey: 'clave' }).collect({ city: ciudad, date: '2026-09-30', http }),
+    ).rejects.toThrow(/límite de peticiones por minuto/);
   });
 
   it('sin clave falla con un mensaje claro y no pide nada', async () => {
