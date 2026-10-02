@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
 import type { HttpClient } from '../pipeline/lib/http.ts';
 import type { CityConfig } from '../pipeline/types.ts';
-import { generarBorrador, readReport } from '../scripts/borrador.ts';
+import { anthropicApiKey, generarBorrador, readReport } from '../scripts/borrador.ts';
 
 const ciudad: CityConfig = {
   id: 'prueba',
@@ -86,13 +86,27 @@ describe('generarBorrador', () => {
   });
 
   it('sin clave de Anthropic sale sin IA y lo dice', async () => {
-    const clave = process.env.ANTHROPIC_API_KEY;
+    const guardadas = {
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      BOLETINES_ANTHROPIC_API_KEY: process.env.BOLETINES_ANTHROPIC_API_KEY,
+    };
     delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.BOLETINES_ANTHROPIC_API_KEY;
     try {
       const resultado = await generarBorrador(ciudad, '2026-09-30', { root, http });
       expect(resultado.ok && resultado.report.sinIa).toMatch(/falta ANTHROPIC_API_KEY/);
     } finally {
-      if (clave !== undefined) process.env.ANTHROPIC_API_KEY = clave;
+      for (const [nombre, valor] of Object.entries(guardadas)) {
+        if (valor !== undefined) process.env[nombre] = valor;
+      }
     }
+  });
+});
+
+describe('anthropicApiKey', () => {
+  it('lee ANTHROPIC_API_KEY y, si no está, el nombre alternativo', () => {
+    expect(anthropicApiKey({ ANTHROPIC_API_KEY: 'a', BOLETINES_ANTHROPIC_API_KEY: 'b' })).toBe('a');
+    expect(anthropicApiKey({ BOLETINES_ANTHROPIC_API_KEY: ' b ' })).toBe('b');
+    expect(anthropicApiKey({ ANTHROPIC_API_KEY: '' })).toBeUndefined();
   });
 });

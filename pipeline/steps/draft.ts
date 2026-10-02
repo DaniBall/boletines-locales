@@ -35,6 +35,8 @@ export interface ClaudeDrafterOptions {
   /** El toque local de la ciudad, si lo tiene. */
   local?: string;
   client?: MessagesClient;
+  /** Clave de la API. Por defecto, la que lea el SDK del entorno. */
+  apiKey?: string;
   model?: string;
   maxTokens?: number;
 }
@@ -48,7 +50,8 @@ export async function loadStylePrompt(root = process.cwd()): Promise<string> {
 }
 
 export function createClaudeDrafter(options: ClaudeDrafterOptions): DraftFn {
-  const client = options.client ?? new Anthropic();
+  const client =
+    options.client ?? new Anthropic(options.apiKey === undefined ? {} : { apiKey: options.apiKey });
   const model = options.model ?? ai.model;
   const maxTokens = options.maxTokens ?? ai.maxOutputTokens;
 
