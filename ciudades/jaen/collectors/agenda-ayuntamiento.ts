@@ -5,6 +5,11 @@
  * que cabe en una sola página y cubre el fin de semana para la edición del
  * viernes.
  *
+ * El listado solo trae título, fecha y precio. Para que la redacción no tenga
+ * que adivinar, se lee además la ficha de cada actividad (una petición por
+ * página y ejecución, con caché): descripción, lugar y horario. Si una ficha
+ * falla, la actividad sigue con lo del listado.
+ *
  * Es propio de Jaén y por eso vive aquí y no en el motor (regla 8).
  */
 import { load } from 'cheerio';
@@ -26,7 +31,18 @@ export function agendaAyuntamientoJaen(): Collector {
     homepage: 'https://www.aytojaen.es/',
     async collect(ctx) {
       const { body } = await ctx.http.get(AGENDA_SEMANA_URL);
-      return parseAgenda(body);
+      const items = parseAgenda(body);
+      const fichas = await Promise.allSettled(
+        items.map(async (item) =>
+          item.url === undefined ? undefined : parseFicha((await ctx.http.get(item.url)).body),
+        ),
+      );
+      return items.map((item, i) => {
+        const ficha = fichas[i];
+        return ficha?.status === 'fulfilled' && ficha.value !== undefined
+          ? completarConFicha(item, ficha.value, ctx.city.name)
+          : item;
+      });
     },
   };
 }
@@ -63,6 +79,97 @@ export function parseAgenda(html: string): Item[] {
   });
 
   return items;
+}
+
+/** Lo que trae la ficha de una actividad. */
+export interface Ficha {
+  descripcion?: string;
+  lugar?: string;
+  /** «20:30 h», tal cual. */
+  horario?: string;
+}
+
+/** Máximo de descripción que se guarda: basta para redactar dos frases. */
+const MAX_DESCRIPCION = 500;
+
+/**
+ * La ficha es una secuencia plana de párrafos: primero la descripción y luego
+ * bloques con etiqueta («Precio:», «Lugar celebración:», «Otros datos de
+ * interés:») seguidos de sus párrafos.
+ */
+export function parseFicha(html: string): Ficha {
+  const $ = load(html);
+  const descripcion: string[] = [];
+  const bloques = new Map<string, string[]>();
+  let actual: string | undefined;
+
+  $('#colD')
+    .first()
+    .find('p')
+    .each((_, p) => {
+      const clase = $(p).attr('class') ?? '';
+      if (clase === 'herramientas' || clase === 'descdch') return;
+      const texto = $(p).clone().children('p').remove().end().text().replace(/\s+/g, ' ').trim();
+      if (texto === '') return;
+
+      const etiqueta = /^([^:]{3,40}):\s*(.*)$/.exec(texto);
+      if (clase === 'ficha' && etiqueta?.[1] !== undefined) {
+        actual = normalizarEtiqueta(etiqueta[1]);
+        bloques.set(actual, etiqueta[2] ? [etiqueta[2]] : []);
+        return;
+      }
+      if (actual === undefined) descripcion.push(texto);
+      else bloques.get(actual)?.push(texto);
+    });
+
+  const ficha: Ficha = {};
+  const texto = descripcion.join(' ');
+  if (texto !== '') {
+    ficha.descripcion =
+      texto.length <= MAX_DESCRIPCION ? texto : `${texto.slice(0, MAX_DESCRIPCION - 1)}…`;
+  }
+  // Algunos lugares vienen con punto final («Jardines de Jabalcuz.»).
+  const lugar = bloques.get('lugar celebracion')?.[0]?.replace(/\.+$/, '');
+  if (lugar) ficha.lugar = lugar;
+  for (const linea of bloques.get('otros datos de interes') ?? []) {
+    const horario = /horario:\s*(.+)/i.exec(linea)?.[1]?.trim();
+    if (horario) {
+      ficha.horario = horario;
+      break;
+    }
+  }
+  return ficha;
+}
+
+function normalizarEtiqueta(etiqueta: string): string {
+  return etiqueta
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Suma la ficha al item: el resumen lleva precio y horario delante (son lo que
+ * más importa y así sobreviven a cualquier recorte) y después la descripción.
+ * El lugar se completa con la ciudad, porque es su agenda municipal y el
+ * filtro de alcance de `select` necesita reconocerla.
+ */
+export function completarConFicha(item: Item, ficha: Ficha, ciudad: string): Item {
+  const partes = [
+    item.summary,
+    ficha.horario === undefined ? undefined : `Horario: ${ficha.horario}`,
+    ficha.descripcion,
+  ].filter((parte): parte is string => parte !== undefined && parte !== '');
+
+  const completo: Item = { ...item };
+  if (partes.length > 0) completo.summary = partes.join('. ').replace(/\.\./g, '.');
+  if (ficha.lugar !== undefined) {
+    completo.place = ficha.lugar.toLowerCase().includes(ciudad.toLowerCase())
+      ? ficha.lugar
+      : `${ficha.lugar}, ${ciudad}`;
+  }
+  return completo;
 }
 
 const MESES: Record<string, number> = {
