@@ -98,15 +98,30 @@ async function elegirRedaccion(
 ): Promise<{ draft: DraftFn } | { noDraftReason: string }> {
   if (options.sinIa) return { noDraftReason: 'Edición generada sin IA (--sin-ia).' };
   if (options.draft) return { draft: options.draft };
-  if ((process.env.ANTHROPIC_API_KEY ?? '') === '') {
+  const apiKey = anthropicApiKey();
+  if (apiKey === undefined) {
     return { noDraftReason: 'Edición generada sin IA: falta ANTHROPIC_API_KEY en el entorno.' };
   }
 
   const local = await cargarPromptLocal(ciudad.id);
   return {
     draft: createClaudeDrafter({
+      apiKey,
       style: await loadStylePrompt(options.root),
       ...(local === undefined ? {} : { local }),
     }),
   };
+}
+
+/**
+ * La clave de Anthropic. `ANTHROPIC_API_KEY` es el nombre de siempre; en los
+ * entornos de Claude Code ese nombre lo usa la propia herramienta y no llega a
+ * los comandos, así que allí se guarda como `BOLETINES_ANTHROPIC_API_KEY`.
+ */
+export function anthropicApiKey(env: NodeJS.ProcessEnv = process.env): string | undefined {
+  for (const nombre of ['ANTHROPIC_API_KEY', 'BOLETINES_ANTHROPIC_API_KEY']) {
+    const valor = env[nombre]?.trim();
+    if (valor) return valor;
+  }
+  return undefined;
 }

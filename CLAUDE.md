@@ -181,6 +181,7 @@ Ejemplos:
 
 - El cron de GitHub Actions va en UTC y puede retrasarse horas: por eso el pipeline diario va en el VPS y no en Actions.
 - En este entorno de Claude Code, el `fetch` de Node necesita `NODE_USE_ENV_PROXY=1` para salir por el proxy (curl no). En el VPS no hace falta.
+- En los entornos de Claude Code, `ANTHROPIC_API_KEY` no llega a los comandos (la usa la propia herramienta): allí la clave del proyecto se guarda como `BOLETINES_ANTHROPIC_API_KEY`, que el pipeline lee si falta la otra.
 - AEMET OpenData responde en dos pasos (primero devuelve una URL en `datos`) y los datos pueden venir en ISO-8859-15: decodifica bien los acentos. En la sección del tiempo, cita «Fuente: AEMET».
 - WhatsApp usa `*negrita*`, `_cursiva_` y `~tachado~`: ojo con `*` y `_` dentro de URLs y nombres propios.
 - La fecha de la edición se calcula en `Europe/Madrid`, con el cambio de hora incluido.
