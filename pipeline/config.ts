@@ -38,7 +38,9 @@ export const limits = {
 /** Redacción con Claude. */
 export const ai = {
   model: process.env.CLAUDE_MODEL ?? 'claude-sonnet-5',
-  maxOutputTokens: 4000,
+  // El razonamiento (adaptive thinking) cuenta dentro del límite: una edición
+  // real gasta unos 6.000 tokens, de los que 4.500 son de razonamiento.
+  maxOutputTokens: 16_000,
 } as const;
 
 /** Scraping educado: una petición por página y ejecución, con contacto visible. */

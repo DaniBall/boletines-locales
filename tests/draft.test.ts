@@ -6,6 +6,7 @@ import {
   buildSystemPrompt,
   buildUserMessage,
   createClaudeDrafter,
+  linkCost,
   loadStylePrompt,
   parseDraft,
   type MessagesClient,
@@ -89,7 +90,7 @@ describe('aiSections', () => {
 });
 
 describe('buildDraftSchema', () => {
-  const schema = buildDraftSchema(aiSections(ciudad, items), items) as {
+  const schema = buildDraftSchema(aiSections(ciudad, items)) as {
     properties: {
       secciones: {
         required: string[];
@@ -109,6 +110,13 @@ describe('buildDraftSchema', () => {
     const { properties } = schema.properties.secciones;
     expect(properties.agenda?.items.properties.item_id.enum).toEqual(['ayto:1']);
     expect(properties.te_afecta?.items.properties.item_id.enum).toEqual(['diario:1']);
+  });
+
+  it('los descartes solo admiten items que Claude ve: no los de las secciones del código', () => {
+    expect(schema.properties.descartes.items.properties.item_id.enum).toEqual([
+      'ayto:1',
+      'diario:1',
+    ]);
   });
 
   it('todos los objetos llevan additionalProperties: false, como exige la API', () => {
@@ -147,6 +155,14 @@ describe('los prompts', () => {
     // El tiempo lo escribe el código: Claude no lo ve.
     expect(mensaje).not.toContain('aemet:1');
     expect(mensaje).not.toContain('x'.repeat(700));
+  });
+
+  it('le dice a Claude cuánto espacio le queda y cuánto ocupa cada enlace', () => {
+    const mensaje = buildUserMessage(ciudad, '2026-09-30', items, aiSections(ciudad, items), 1200);
+
+    expect(mensaje).toContain('quedan unos 1200 caracteres');
+    expect(mensaje).toContain(`"enlace": ${String(linkCost(items[1] as Item))}`);
+    expect(linkCost(items[1] as Item)).toBe('https://ayto.invalid/concierto'.length + 16);
   });
 
   it('el viernes avisa de que la edición incluye el fin de semana', () => {

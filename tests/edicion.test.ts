@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { editionNumber, readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
 import { greetingDate } from '../pipeline/lib/fechas.ts';
 import type { HttpClient } from '../pipeline/lib/http.ts';
-import { generateEdition, type DraftFn } from '../pipeline/steps/edition.ts';
+import { draftBudget, generateEdition, type DraftFn } from '../pipeline/steps/edition.ts';
 import { routeWeekend } from '../pipeline/steps/finde.ts';
 import { renderEdition } from '../pipeline/steps/render.ts';
 import type { CityConfig, Collector, Draft, Edition, Item } from '../pipeline/types.ts';
@@ -258,6 +258,48 @@ describe('generateEdition', () => {
 
     expect(report.sinIa).toBe('Falló la redacción con Claude: Sin saldo.');
     expect(edition.body).toContain('Cortan la calle Mayor por obras');
+  });
+});
+
+describe('draftBudget', () => {
+  it('descuenta del tope lo que no escribe Claude', () => {
+    const conPrecios = draftBudget(
+      { ...ciudad(), sections: [...ciudad().sections] },
+      MIERCOLES,
+      3,
+      [noticia],
+    );
+    const sinNada = draftBudget(ciudad(), MIERCOLES, 3, []);
+
+    expect(conPrecios).toBeGreaterThan(2500);
+    expect(conPrecios).toBeLessThan(3000);
+    // Sin items de IA no hay títulos de sección que descontar.
+    expect(sinNada).toBeGreaterThan(conPrecios);
+  });
+
+  it('pasa el presupuesto a la redacción', async () => {
+    let recibido: number | undefined;
+    const draft: DraftFn = ({ budget }) => {
+      recibido = budget;
+      return Promise.resolve({ titular: '', secciones: {}, descartes: [] });
+    };
+    const root = await mkdtemp(path.join(tmpdir(), 'boletines-presupuesto-'));
+    try {
+      await generateEdition({
+        city: ciudad([
+          { id: 'diario', section: 'te_afecta', collect: () => Promise.resolve([noticia]) },
+        ]),
+        date: MIERCOLES,
+        http: {} as HttpClient,
+        numero: 3,
+        draft,
+        root,
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+
+    expect(recibido).toBe(draftBudget(ciudad(), MIERCOLES, 3, [noticia]));
   });
 });
 

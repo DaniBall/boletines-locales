@@ -118,7 +118,7 @@ Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la 
 
 1. `npm run edicion` de punta a punta, sin IA. ✅
 2. Colector de AEMET (con `AEMET_API_KEY` como variable de entorno). Hecho y probado con la clave.
-3. `draft` con Claude (con `ANTHROPIC_API_KEY` como variable de entorno). Hecho con un cliente simulado; falta la prueba real.
+3. `draft` con Claude (con `ANTHROPIC_API_KEY` como variable de entorno). Hecho y probado en real.
 4. Panel de revisión en local (`npm run panel`): ver, editar y aprobar. Hecho: `PANEL_GIT=off|commit|push` decide qué hace «Aprobar» con git.
 5. Una o dos semanas de ensayo sin publicar.
 6. VPS, dominio, control de acceso al panel, timer y avisos al editor.
@@ -206,7 +206,7 @@ Lo que hace el editor, una vez:
 - [ ] Colectores propios de Jaén para la agenda (Ayuntamiento y una fuente más), con fixture y test, y 3–4 feeds RSS locales en su config.
 - [x] `select`: ventana de fechas, alcance, deduplicado (URL y similitud de título) y exclusión de lo publicado en los últimos 14 días.
 - [x] `render` y `npm run edicion` de punta a punta sin IA: saludo, secciones en el orden de la ciudad, plantillas deterministas, reparto del viernes a «Este finde», número correlativo e informe de revisión en `.cache/revision/`.
-- [x] `draft` con structured outputs y prompts versionados (comunes y de la ciudad). (Probado con un cliente simulado; falta la prueba real con `ANTHROPIC_API_KEY` y ajustar el prompt en el ensayo.)
+- [x] `draft` con structured outputs y prompts versionados (comunes y de la ciudad). (Probado en real el 02-10-2026 con Jaén: unos 6.200 tokens de entrada y 6.000 de salida, la mayoría de razonamiento, ≈ 0,07 $ por edición. Claude recibe el espacio que le queda en el mensaje y cuánto ocupa cada enlace. Falta ajustar el prompt en el ensayo.)
 - [ ] `validate` y sección «Avisos». (El paso `validate` está hecho y sus avisos van al frontmatter y al informe de revisión; falta mostrarlos en el panel.)
 - [x] Panel de revisión en local (`npm run panel`): lista de borradores por ciudad, vista previa de la web y de WhatsApp, edición del Markdown, avisos, descartes, regenerar y aprobar (commit en `main`).
 - [ ] (Editor, guiado por Claude Code) VPS: pipeline con un timer de systemd por ciudad (separados al menos un minuto: AEMET corta con un 429 si se le hacen muchas peticiones seguidas y no dice cuándo volver), panel en un subdominio con control de acceso, HTTPS, avisos al editor y copia de seguridad de los borradores. Los detalles pendientes están en «Pendiente de decidir» de `CLAUDE.md`.

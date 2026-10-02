@@ -3,6 +3,7 @@
  * validate → render. Devuelve la edición y un informe para la revisión; no
  * escribe nada, eso lo decide quien llama.
  */
+import { limits } from '../config.ts';
 import { editionUrl, publishedUrls } from '../lib/edicion.ts';
 import { isFriday, type IsoDate } from '../lib/fechas.ts';
 import type { HttpClient } from '../lib/http.ts';
@@ -12,10 +13,22 @@ import { collect, type SourceHealth } from './collect.ts';
 import { routeWeekend, type WeekendRoute } from './finde.ts';
 import { renderEdition } from './render.ts';
 import { select, type Discarded } from './select.ts';
-import { dropInvalid, validateDraft, validateWhatsapp, type Issue } from './validate.ts';
+import {
+  dropInvalid,
+  messageLength,
+  validateDraft,
+  validateWhatsapp,
+  type Issue,
+} from './validate.ts';
 
 /** Redacta con Claude. Sin ella, la edición sale en modo sin IA. */
-export type DraftFn = (input: { city: CityConfig; date: IsoDate; items: Item[] }) => Promise<Draft>;
+export type DraftFn = (input: {
+  city: CityConfig;
+  date: IsoDate;
+  items: Item[];
+  /** Caracteres de WhatsApp que quedan para lo que redacta Claude, enlaces incluidos. */
+  budget?: number;
+}) => Promise<Draft>;
 
 export interface EditionInput {
   city: CityConfig;
@@ -57,6 +70,16 @@ export async function generateEdition(
     isWeekendEdition: isFriday(date),
   });
 
+  const sources = new Map(
+    city.collectors.map((colector) => [
+      colector.id,
+      {
+        name: colector.name ?? colector.id,
+        ...(colector.homepage === undefined ? {} : { homepage: colector.homepage }),
+      },
+    ]),
+  );
+
   // Fallos aislados (regla 5): si Claude falla, la edición sale igual.
   let draft: Draft | undefined;
   let sinIa: string | undefined;
@@ -66,7 +89,8 @@ export async function generateEdition(
     sinIa = input.noDraftReason ?? 'Edición generada sin IA.';
   } else {
     try {
-      const bruto = await input.draft({ city, date, items: selected });
+      const budget = draftBudget(city, date, input.numero, selected, sources);
+      const bruto = await input.draft({ city, date, items: selected, budget });
       const validacion = validateDraft(bruto, selected, city);
       ({ errors, warnings } = validacion);
       draft = dropInvalid(bruto, validacion);
@@ -86,16 +110,6 @@ export async function generateEdition(
     ...errors.map((issue) => `Quitado del borrador: ${issue.message}`),
     ...warnings.map((issue) => issue.message),
   ];
-
-  const sources = new Map(
-    city.collectors.map((colector) => [
-      colector.id,
-      {
-        name: colector.name ?? colector.id,
-        ...(colector.homepage === undefined ? {} : { homepage: colector.homepage }),
-      },
-    ]),
-  );
 
   const renderizada = renderEdition({
     city,
@@ -130,4 +144,31 @@ export async function generateEdition(
       ...(sinIa === undefined ? {} : { sinIa }),
     },
   };
+}
+
+/**
+ * Lo que queda del tope de WhatsApp después de lo que no escribe Claude: el
+ * saludo, las secciones del código, el cierre y los títulos de las secciones
+ * que sí redacta.
+ */
+export function draftBudget(
+  city: CityConfig,
+  date: IsoDate,
+  numero: number,
+  items: readonly Item[],
+  sources?: ReadonlyMap<string, { name: string; homepage?: string }>,
+): number {
+  const fijo = renderEdition({
+    city,
+    date,
+    numero,
+    items,
+    draft: { titular: '', secciones: {}, descartes: [] },
+    ...(sources === undefined ? {} : { sources }),
+  });
+  const base = messageLength(renderWhatsapp(fijo.body, { editionUrl: editionUrl(city, date) }));
+  const titulos = city.sections
+    .filter((s) => s.writer === 'ai' && items.some((item) => item.section === s.id))
+    .reduce((total, s) => total + messageLength(s.title) + 4, 0);
+  return Math.max(0, limits.maxEditionChars - base - titulos);
 }
