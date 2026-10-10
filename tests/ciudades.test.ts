@@ -2,7 +2,9 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
 import { describe, expect, it } from 'vitest';
+import { FESTIVOS_NACIONALES_2026 } from '../ciudades/festivos-comunes.ts';
 import { buscarCiudad, ciudades, getCiudad, idsCiudades } from '../ciudades/index.ts';
+import { hasEdition } from '../pipeline/lib/fechas.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
 
@@ -94,5 +96,39 @@ describe('cada ciudad', () => {
   it('solo usa secciones propias que no pisen las comunes', () => {
     const propias = ciudades.flatMap((ciudad) => ciudad.sections.slice(7).map((s) => s.id));
     expect(propias).toEqual(['aceite', 'carreteras', 'tapa', 'tuvisa', 'anillo_verde']);
+  });
+});
+
+describe('los festivos', () => {
+  it.each(ciudades.map((ciudad) => [ciudad.id, ciudad] as const))(
+    '%s tiene fechas válidas, ordenadas y sin repetir, con las nacionales',
+    (_id, ciudad) => {
+      expect(ciudad.holidays.every((fecha) => /^\d{4}-\d{2}-\d{2}$/.test(fecha))).toBe(true);
+      expect(ciudad.holidays.every((fecha) => !Number.isNaN(Date.parse(fecha)))).toBe(true);
+      expect([...ciudad.holidays]).toEqual([...new Set(ciudad.holidays)].toSorted());
+      expect(ciudad.holidays).toEqual(expect.arrayContaining([...FESTIVOS_NACIONALES_2026]));
+    },
+  );
+
+  it('el 12 de octubre no hay edición en ninguna ciudad', () => {
+    expect(ciudades.map((ciudad) => hasEdition('2026-10-12', ciudad.holidays))).toEqual([
+      false,
+      false,
+      false,
+    ]);
+  });
+
+  it('respeta lo propio de cada comunidad y ciudad', () => {
+    const edicion = (id: string, fecha: string) => hasEdition(fecha, getCiudad(id).holidays);
+
+    // Andalucía y Castilla y León trasladan Todos los Santos al lunes; Euskadi, no.
+    expect(edicion('jaen', '2026-11-02')).toBe(false);
+    expect(edicion('leon', '2026-11-02')).toBe(false);
+    expect(edicion('vitoria', '2026-11-02')).toBe(true);
+    // Locales: Santa Catalina en Jaén, San Froilán en León, la Virgen Blanca en Vitoria.
+    expect(edicion('jaen', '2026-11-25')).toBe(false);
+    expect(edicion('leon', '2026-11-25')).toBe(true);
+    expect(edicion('leon', '2026-10-05')).toBe(false);
+    expect(edicion('vitoria', '2026-08-05')).toBe(false);
   });
 });

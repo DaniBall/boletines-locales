@@ -127,7 +127,7 @@ Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la 
 
 - Día 1 (2-10-2026): Claude deducía del título la hora y el tipo de evento («esta noche», «concierto»). Se arregló con la guía de estilo v3 y con la ficha de cada actividad de la agenda (descripción, lugar y horario).
 - Día 2 (9-10-2026; el aviso del lunes 5 no llegó a tiempo): horas, lugares y cifras, correctos. Problemas: el mensaje pasaba del tope (3.344 caracteres), así que ahora Claude recibe el número máximo de entradas que caben; un matiz de sujeto («Alsa desconvoca»); una noticia del día anterior que no cambia el día del lector. «Este finde» salió vacío porque la agenda semanal no traía nada que empezara el sábado o el domingo. El informe de revisión guarda ahora lo que recibió la redacción, y el panel lo enseña.
-- Pendiente: los festivos (el 12 de octubre no está en `holidays` de ninguna ciudad).
+- Festivos de 2026 añadidos a las tres ciudades (`ciudades/<id>/festivos.ts`, con su fuente). Quedan por contrastar en su boletín los locales de León (24 de junio y 5 de octubre, en el BOP de León) y el 28 de abril de Vitoria-Gasteiz; ya han pasado y no afectan al ensayo.
 
 ## 6. Redacción con Claude
 

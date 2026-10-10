@@ -4,6 +4,7 @@ import { rssCollector } from '../../pipeline/collectors/rss.ts';
 import { newsSitemapCollector } from '../../pipeline/collectors/sitemap-noticias.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
+import { festivos } from './festivos.ts';
 import { agendaAyuntamientoJaen } from './collectors/agenda-ayuntamiento.ts';
 
 const name = 'Jaén';
@@ -95,5 +96,5 @@ export const jaen: CityConfig = {
     agendaAyuntamientoJaen(),
   ],
 
-  holidays: [],
+  holidays: festivos,
 };

@@ -185,6 +185,7 @@ Ejemplos:
 - AEMET OpenData responde en dos pasos (primero devuelve una URL en `datos`) y los datos pueden venir en ISO-8859-15: decodifica bien los acentos. En la sección del tiempo, cita «Fuente: AEMET».
 - WhatsApp usa `*negrita*`, `_cursiva_` y `~tachado~`: ojo con `*` y `_` dentro de URLs y nombres propios.
 - La fecha de la edición se calcula en `Europe/Madrid`, con el cambio de hora incluido.
+- Los festivos se renuevan cada año, cuando se publican (de octubre a diciembre): los nacionales comunes en `ciudades/festivos-comunes.ts` y los de cada comunidad y municipio en `ciudades/<id>/festivos.ts`, con su fuente. Si una ciudad no tiene festivos del año de la edición, el borrador lo avisa. Los boletines oficiales (BOE, BOJA, BOCYL, BOPV) no están en la lista de dominios de red de este entorno.
 - Las URLs de la web acaban en barra y el build es por directorios, así que los Workers usan `html_handling: auto-trailing-slash` y `not_found_handling: 404-page`, que necesita que exista `src/pages/404.astro`.
 - En Euskadi el tráfico interurbano lo gestiona el Gobierno Vasco, no la DGT: Vitoria-Gasteiz usa su propio colector de movilidad (Open Data Euskadi) en lugar del genérico.
 

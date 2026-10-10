@@ -33,7 +33,7 @@ export interface CityConfig {
   /** Genéricos ya configurados más los propios. */
   collectors: Collector[];
   /** AAAA-MM-DD sin edición. */
-  holidays: string[];
+  holidays: readonly string[];
 }
 
 export interface CollectContext {

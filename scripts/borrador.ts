@@ -83,6 +83,15 @@ export async function generarBorrador(
     ...redaccion,
   });
 
+  // Sin festivos de ese año, la edición saldría también en días de fiesta.
+  const anio = fecha.slice(0, 4);
+  if (!ciudad.holidays.some((festivo) => festivo.startsWith(anio))) {
+    edition.frontmatter.avisos = [
+      ...(edition.frontmatter.avisos ?? []),
+      `Faltan los festivos de ${anio} de ${ciudad.name} en su config: hoy podría ser fiesta.`,
+    ];
+  }
+
   const archivo = await writeEdition(edition, root);
   const informe = reportPath(ciudad.id, fecha, root);
   await mkdir(path.dirname(informe), { recursive: true });

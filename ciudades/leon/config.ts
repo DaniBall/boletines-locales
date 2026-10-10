@@ -2,6 +2,7 @@ import { aemetCollector } from '../../pipeline/collectors/aemet.ts';
 import { fuelCollector } from '../../pipeline/collectors/carburantes.ts';
 import type { CityConfig } from '../../pipeline/types.ts';
 import { seccionesComunes } from '../secciones-comunes.ts';
+import { festivos } from './festivos.ts';
 
 const name = 'León';
 
@@ -37,5 +38,5 @@ export const leon: CityConfig = {
 
   collectors: [aemetCollector(), fuelCollector()],
 
-  holidays: [],
+  holidays: festivos,
 };
