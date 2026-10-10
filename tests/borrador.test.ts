@@ -76,6 +76,21 @@ describe('generarBorrador', () => {
     ).toBe(false);
   });
 
+  it('con ensayo, escribe en content/<id>/ensayo y no toca las ediciones', async () => {
+    const resultado = await generarBorrador(ciudad, '2026-09-30', {
+      root,
+      http,
+      sinIa: true,
+      ensayo: true,
+    });
+
+    expect(resultado.ok && resultado.archivo).toBe(
+      path.join(root, 'content', 'prueba', 'ensayo', '2026-09-30.md'),
+    );
+    expect(resultado.ok && resultado.report.whatsapp).toContain('/ensayo/2026-09-30/');
+    await expect(readEdition('prueba', '2026-09-30', root)).rejects.toThrow();
+  });
+
   it('no pisa una edición publicada', async () => {
     await writeEdition(
       {

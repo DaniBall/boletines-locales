@@ -47,6 +47,7 @@ Se inspira en el modelo Pamplonews/Logronews, pero no copia su nombre ni el patr
 │   └── vitoria/           # misma estructura
 ├── content/
 │   ├── jaen/ediciones/    # AAAA-MM-DD.md, una por edición (fuente de verdad)
+│   ├── jaen/ensayo/       # borradores de prueba, en /ensayo/ de la web (noindex)
 │   ├── leon/ediciones/
 │   └── vitoria/ediciones/
 ├── prompts/               # guía de estilo común
@@ -59,7 +60,7 @@ Se inspira en el modelo Pamplonews/Logronews, pero no copia su nombre ni el patr
 ├── panel/                 # panel de revisión: usa el motor, el registro y scripts/borrador.ts
 ├── src/                   # web Astro: la ciudad llega por CIUDAD y el registro
 ├── tests/                 # incluye fixtures/<id>/ con HTML y RSS guardados
-└── .github/workflows/     # ci.yml
+└── .github/workflows/     # ci.yml, avisos.yml (aviso por ntfy al subir un borrador o una edición)
 ```
 
 ## Contratos
@@ -116,6 +117,8 @@ npm run edicion -- --ciudad jaen --fecha 2026-09-21           # pipeline complet
 npm run edicion -- --ciudad leon --fecha 2026-09-21 --sin-ia  # sin llamar a Claude, para desarrollar gratis
 npm run fuentes -- --ciudad leon --fecha 2026-09-21           # tabla de salud de las fuentes
 npm run whatsapp -- --ciudad jaen --fecha 2026-09-21          # imprime el texto listo para pegar
+npm run edicion -- --ciudad jaen --ensayo                     # borrador de prueba → content/jaen/ensayo/ (y /ensayo/ en la web)
+npm run aviso -- --ciudad jaen --fecha 2026-09-21 --ensayo    # título, texto y enlace del aviso (lo usa avisos.yml)
 npm run panel                                                 # panel de revisión en http://127.0.0.1:4322 (PANEL_GIT=off|commit|push)
 ```
 
@@ -193,6 +196,7 @@ Ejemplos:
 
 - Fase 1: `ANTHROPIC_API_KEY` y `AEMET_API_KEY`, compartidos por todas las ciudades. Mientras se prueba, como variables de entorno de este entorno de Claude Code o en `.env` local; después, en el VPS (fuera del repo). Cloudflare se conecta al repo desde su panel con Workers Builds y no necesita secrets en GitHub.
 - VPS: un token de GitHub con permiso de escritura solo sobre este repo, para que el panel haga el commit al aprobar, y el secreto del canal de avisos al editor.
+- Avisos (GitHub Secrets): `NTFY_TOPIC`, el tema de ntfy.sh al que está suscrito el móvil del editor. Funciona como contraseña: largo y aleatorio. Sin él, `avisos.yml` no avisa.
 - Fase 2: `WHATSAPP_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` y un `WHATSAPP_PHONE_NUMBER_ID_<CIUDAD>` por ciudad.
 
 ## Pendiente de decidir (pregunta antes de asumir)

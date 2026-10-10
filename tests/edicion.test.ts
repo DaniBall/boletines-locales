@@ -2,7 +2,13 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { editionNumber, readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
+import {
+  editionNumber,
+  editionUrl,
+  publishedUrls,
+  readEdition,
+  writeEdition,
+} from '../pipeline/lib/edicion.ts';
 import { greetingDate } from '../pipeline/lib/fechas.ts';
 import type { HttpClient } from '../pipeline/lib/http.ts';
 import { draftBudget, generateEdition, type DraftFn } from '../pipeline/steps/edition.ts';
@@ -339,5 +345,50 @@ describe('editionNumber y writeEdition', () => {
     expect(file).toBe(path.join(root, 'content', 'prueba', 'ediciones', `${MIERCOLES}.md`));
     expect(await readFile(file, 'utf8')).toMatch(/^---\nciudad: prueba\n/);
     await expect(readEdition('prueba', MIERCOLES, root)).resolves.toEqual(edicion(MIERCOLES, 6));
+  });
+});
+
+describe('el ensayo', () => {
+  let root: string;
+
+  beforeEach(async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'boletines-ensayo-'));
+  });
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const borrador = (fecha: string, numero: number, cuerpo = '¡Buenos días!'): Edition => ({
+    frontmatter: { ciudad: 'prueba', fecha, numero, estado: 'borrador', fuentes: [] },
+    body: cuerpo,
+  });
+
+  it('guarda en su carpeta y no en la de ediciones, con su propia numeración', async () => {
+    const file = await writeEdition(borrador(MIERCOLES, 1), root, 'ensayo');
+
+    expect(file).toBe(path.join(root, 'content', 'prueba', 'ensayo', `${MIERCOLES}.md`));
+    await expect(readEdition('prueba', MIERCOLES, root)).rejects.toThrow(/No hay edición/);
+    await expect(editionNumber('prueba', '2026-10-01', root, 'ensayo')).resolves.toBe(2);
+    await expect(editionNumber('prueba', '2026-10-01', root)).resolves.toBe(1);
+  });
+
+  it('enlaza a /ensayo/ en la web de la ciudad', () => {
+    expect(editionUrl(ciudad(), MIERCOLES, 'ensayo')).toBe(
+      'https://ejemplo.invalid/ensayo/2026-09-30/',
+    );
+  });
+
+  it('cuenta los borradores del ensayo para no repetir solo si se pide', async () => {
+    await writeEdition(
+      borrador('2026-09-29', 1, '- **Obras**: Calle Mayor. [Fuente](https://diario.invalid/obras)'),
+      root,
+      'ensayo',
+    );
+
+    await expect(publishedUrls('prueba', MIERCOLES, 14, root)).resolves.toEqual([]);
+    await expect(
+      publishedUrls('prueba', MIERCOLES, 14, root, ['ediciones', 'ensayo']),
+    ).resolves.toEqual(['https://diario.invalid/obras']);
   });
 });

@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { ciudadActual } from '../../../ciudades/index.ts';
+import { longDate } from '../../../pipeline/lib/fechas.ts';
+
+const ciudad = ciudadActual();
+const borradores = (await getCollection('ensayo')).sort((a, b) =>
+  b.data.fecha.localeCompare(a.data.fecha),
+);
+---
+
+<Base
+  title={`Ensayo · ${ciudad.brand.name}`}
+  description={`Borradores de prueba del boletín de ${ciudad.name}.`}
+  noindex
+>
+  <h1>Ensayo del boletín de {ciudad.name}</h1>
+  <p class="aviso">
+    Estos son borradores de prueba: no se han publicado. Cada mañana sale uno, escrito a partir de
+    las webs que se enlazan en cada noticia.
+  </p>
+  <h2>Cómo ayudar</h2>
+  <ul>
+    <li>Abre el borrador del día y lee cada noticia y cada plan.</li>
+    <li>
+      Si una hora, un lugar, un precio o un dato no cuadra con lo que sabes o con la web enlazada, o
+      si falta algo importante de la ciudad, díselo a quien te pasó este enlace.
+    </li>
+    <li>Nos sirve igual saber qué te sobra, qué no entiendes o qué echarías en falta.</li>
+  </ul>
+
+  <h2>Borradores</h2>
+  {borradores.length === 0 ? (
+    <p class="meta">Todavía no hay ningún borrador.</p>
+  ) : (
+    <ul class="lista-ediciones">
+      {borradores.map((borrador) => (
+        <li>
+          <a href={`/ensayo/${borrador.data.fecha}/`}>{longDate(borrador.data.fecha)}</a>
+          <span>Día {borrador.data.numero} del ensayo</span>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

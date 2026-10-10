@@ -1,0 +1,56 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import AccionesEdicion from '../../components/AccionesEdicion.astro';
+import { ciudadActual } from '../../../ciudades/index.ts';
+import { longDate } from '../../../pipeline/lib/fechas.ts';
+import { editionUrl } from '../../../pipeline/lib/edicion.ts';
+import { renderWhatsapp } from '../../../pipeline/render/whatsapp.ts';
+
+export const getStaticPaths = (async () => {
+  const borradores = await getCollection('ensayo');
+  return borradores.map((borrador) => ({
+    params: { fecha: borrador.data.fecha },
+    props: { borrador },
+  }));
+}) satisfies GetStaticPaths;
+
+const { borrador } = Astro.props;
+const { Content } = await render(borrador);
+
+const ciudad = ciudadActual();
+const fecha = borrador.data.fecha;
+const textoWhatsapp = renderWhatsapp(borrador.body ?? '', {
+  editionUrl: editionUrl(ciudad, fecha, 'ensayo'),
+});
+---
+
+<Base title={`Ensayo · ${longDate(fecha)} · ${ciudad.brand.name}`} noindex>
+  <p class="meta">
+    <a href="/ensayo/">← Todos los borradores del ensayo</a>
+  </p>
+  <h1>{longDate(fecha)}</h1>
+  <p class="aviso">
+    Borrador de prueba, día {borrador.data.numero} del ensayo: no se ha publicado. ¿Algo no cuadra o
+    falta algo? Díselo a quien te pasó este enlace.
+  </p>
+
+  <article class="edicion">
+    <Content />
+  </article>
+
+  {borrador.data.fuentes.length > 0 && (
+    <>
+      <h2>Fuentes</h2>
+      <ul>
+        {borrador.data.fuentes.map((fuente) => (
+          <li>{fuente.url ? <a href={fuente.url}>{fuente.nombre}</a> : fuente.nombre}</li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <h2>Así llegaría a WhatsApp</h2>
+  <AccionesEdicion texto={textoWhatsapp} />
+</Base>

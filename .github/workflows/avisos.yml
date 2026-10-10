@@ -1,0 +1,79 @@
+name: Avisos
+
+# Cuando llega a main un borrador del ensayo o una edición, espera a que
+# Cloudflare la sirva y manda un aviso al móvil del editor por ntfy.
+# El tema de ntfy va en el secret NTFY_TOPIC: sin él, el workflow no avisa.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/*/ensayo/*.md'
+      - 'content/*/ediciones/*.md'
+
+permissions:
+  contents: read
+
+jobs:
+  avisar:
+    name: Avisar de borradores y ediciones
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Avisar
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ANTES: ${{ github.event.before }}
+          DESPUES: ${{ github.sha }}
+        run: |
+          if [ -z "$NTFY_TOPIC" ]; then
+            echo "::notice::Sin NTFY_TOPIC: no se manda ningún aviso."
+            exit 0
+          fi
+
+          # Lo añadido o cambiado en este push (si no hay commit anterior, el último).
+          if [ -z "$ANTES" ] || [ "$ANTES" = "0000000000000000000000000000000000000000" ]; then
+            ANTES="$DESPUES~1"
+          fi
+          git diff --name-only --diff-filter=AM "$ANTES" "$DESPUES" -- 'content/*/ensayo/*.md' 'content/*/ediciones/*.md' > cambios.txt
+          cat cambios.txt
+
+          while read -r archivo; do
+            [ -z "$archivo" ] && continue
+            ciudad=$(echo "$archivo" | cut -d/ -f2)
+            tipo=$(echo "$archivo" | cut -d/ -f3)
+            fecha=$(basename "$archivo" .md)
+            extra=""
+            [ "$tipo" = "ensayo" ] && extra="--ensayo"
+
+            aviso=$(npm run --silent aviso -- --ciudad "$ciudad" --fecha "$fecha" $extra)
+            url=$(echo "$aviso" | jq -r .url)
+
+            # Espera a que Cloudflare despliegue la página (hasta 15 minutos).
+            for intento in $(seq 1 30); do
+              codigo=$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)
+              [ "$codigo" = "200" ] && break
+              sleep 30
+            done
+            if [ "$codigo" != "200" ]; then
+              echo "::warning::$url sigue sin responder ($codigo): aviso igualmente."
+            fi
+
+            # En JSON y no en cabeceras: los títulos llevan tildes.
+            echo "$aviso" \
+              | jq --arg topic "$NTFY_TOPIC" \
+                  '{topic: $topic, title: .titulo, message: .mensaje, click: .url, tags: ["newspaper"]}' \
+              | curl -sS --fail -H 'Content-Type: application/json' --data-binary @- https://ntfy.sh/ > /dev/null
+            echo "Aviso enviado: $url"
+          done < cambios.txt
