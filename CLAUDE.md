@@ -76,6 +76,7 @@ interface CityConfig {
   sections: SectionDef[];         // orden y secciones activas, incluidas las propias
   collectors: Collector[];        // genéricos configurados + propios
   holidays: string[];             // AAAA-MM-DD sin edición
+  rehearsal?: { notifyTopic: string }; // tema público de ntfy.sh para los avisos del ensayo (la campana de /ensayo/)
 }
 
 interface SectionDef {
@@ -196,7 +197,7 @@ Ejemplos:
 
 - Fase 1: `ANTHROPIC_API_KEY` y `AEMET_API_KEY`, compartidos por todas las ciudades. Mientras se prueba, como variables de entorno de este entorno de Claude Code o en `.env` local; después, en el VPS (fuera del repo). Cloudflare se conecta al repo desde su panel con Workers Builds y no necesita secrets en GitHub.
 - VPS: un token de GitHub con permiso de escritura solo sobre este repo, para que el panel haga el commit al aprobar, y el secreto del canal de avisos al editor.
-- Avisos (GitHub Secrets): `NTFY_TOPIC`, el tema de ntfy.sh al que está suscrito el móvil del editor. Funciona como contraseña: largo y aleatorio. Sin él, `avisos.yml` no avisa.
+- Avisos (GitHub Secrets): `NTFY_TOPIC`, el tema privado de ntfy.sh del editor, al que llegan los avisos de borradores y ediciones. Funciona como contraseña: largo y aleatorio. Los borradores del ensayo avisan además al tema público de cada ciudad (`rehearsal.notifyTopic`), que enseña la campana de `/ensayo/`; al ser público, cualquiera podría publicar en él.
 - Fase 2: `WHATSAPP_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` y un `WHATSAPP_PHONE_NUMBER_ID_<CIUDAD>` por ciudad.
 
 ## Pendiente de decidir (pregunta antes de asumir)

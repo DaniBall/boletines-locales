@@ -97,4 +97,7 @@ export const jaen: CityConfig = {
   ],
 
   holidays: festivos,
+
+  // Tema de ntfy.sh de los avisos del ensayo (la campana de /ensayo/).
+  rehearsal: { notifyTopic: 'boletin-jaen-ensayo-laota5jwq3' },
 };

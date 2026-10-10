@@ -103,6 +103,8 @@ async function main(): Promise<number> {
           : `${ciudad.brand.name}: edición nº ${String(frontmatter.numero)} publicada`,
         mensaje: `${greetingDate(fecha)}. Ya está en la web.`,
         url: editionUrl(ciudad, fecha, kind),
+        // Tema público del ensayo, además del privado del editor.
+        tema: ensayo ? (ciudad.rehearsal?.notifyTopic ?? null) : null,
       };
       process.stdout.write(`${JSON.stringify(aviso)}\n`);
       return 0;

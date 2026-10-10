@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
+import CampanaAvisos from '../../components/CampanaAvisos.astro';
 import AccionesEdicion from '../../components/AccionesEdicion.astro';
 import { ciudadActual } from '../../../ciudades/index.ts';
 import { longDate } from '../../../pipeline/lib/fechas.ts';
@@ -35,6 +36,8 @@ const textoWhatsapp = renderWhatsapp(borrador.body ?? '', {
     Borrador de prueba, día {borrador.data.numero} del ensayo: no se ha publicado. ¿Algo no cuadra o
     falta algo? Díselo a quien te pasó este enlace.
   </p>
+
+  {ciudad.rehearsal && <CampanaAvisos tema={ciudad.rehearsal.notifyTopic} />}
 
   <article class="edicion">
     <Content />
