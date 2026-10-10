@@ -4,7 +4,7 @@
  * escribe nada, eso lo decide quien llama.
  */
 import { limits } from '../config.ts';
-import { editionUrl, publishedUrls } from '../lib/edicion.ts';
+import { editionUrl, publishedUrls, type EditionKind } from '../lib/edicion.ts';
 import { isFriday, type IsoDate } from '../lib/fechas.ts';
 import type { HttpClient } from '../lib/http.ts';
 import { renderWhatsapp } from '../render/whatsapp.ts';
@@ -38,6 +38,8 @@ export interface EditionInput {
   /** Qué sección de agenda pasa a cuál el viernes. */
   weekend?: WeekendRoute;
   draft?: DraftFn;
+  /** `ensayo`: los borradores de prueba cuentan como publicados para no repetir. */
+  kind?: EditionKind;
   /** Por qué no hay `draft`, para los avisos. Por defecto, «Edición generada sin IA.». */
   noDraftReason?: string;
   root?: string;
@@ -70,7 +72,13 @@ export async function generateEdition(
   const { items: recogidos, health } = await collect(city, date, input.http);
   const repartidos = input.weekend ? routeWeekend(recogidos, date, input.weekend) : recogidos;
   const { selected, discarded } = select(repartidos, city, date, {
-    publishedUrls: await publishedUrls(city.id, date, undefined, input.root),
+    publishedUrls: await publishedUrls(
+      city.id,
+      date,
+      undefined,
+      input.root,
+      input.kind === 'ensayo' ? ['ediciones', 'ensayo'] : ['ediciones'],
+    ),
     ...(input.weekend ? { weekendSections: [input.weekend.to] } : {}),
     isWeekendEdition: isFriday(date),
   });
@@ -126,7 +134,9 @@ export async function generateEdition(
     sources,
   });
 
-  const whatsapp = renderWhatsapp(renderizada.body, { editionUrl: editionUrl(city, date) });
+  const whatsapp = renderWhatsapp(renderizada.body, {
+    editionUrl: editionUrl(city, date, input.kind),
+  });
   const largo = validateWhatsapp(whatsapp).warnings;
   const frontmatter =
     largo.length === 0

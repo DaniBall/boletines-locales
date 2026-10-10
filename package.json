@@ -20,6 +20,7 @@
     "edicion": "tsx scripts/cli.ts edicion",
     "fuentes": "tsx scripts/cli.ts fuentes",
     "whatsapp": "tsx scripts/cli.ts whatsapp",
+    "aviso": "tsx scripts/cli.ts aviso",
     "panel": "tsx panel/main.ts"
   },
   "dependencies": {

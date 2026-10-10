@@ -6,11 +6,13 @@ import { tagline } from '../../pipeline/config.ts';
 interface Props {
   title: string;
   description?: string;
+  /** Páginas que no deben salir en buscadores, como las del ensayo. */
+  noindex?: boolean;
 }
 
 const ciudad = ciudadActual();
 const promesa = tagline(ciudad.name);
-const { title, description = promesa } = Astro.props;
+const { title, description = promesa, noindex = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -25,6 +27,7 @@ const { title, description = promesa } = Astro.props;
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_ES" />
     <link rel="canonical" href={Astro.url.href} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
     <header class="cabecera">

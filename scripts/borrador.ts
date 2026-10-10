@@ -10,7 +10,12 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { cargarPromptLocal } from '../ciudades/index.ts';
 import { http as httpConfig } from '../pipeline/config.ts';
-import { editionNumber, readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
+import {
+  editionNumber,
+  readEdition,
+  writeEdition,
+  type EditionKind,
+} from '../pipeline/lib/edicion.ts';
 import { hasEdition, type IsoDate } from '../pipeline/lib/fechas.ts';
 import { HttpClient } from '../pipeline/lib/http.ts';
 import { createClaudeDrafter, loadStylePrompt } from '../pipeline/steps/draft.ts';
@@ -20,6 +25,8 @@ import type { CityConfig, Edition } from '../pipeline/types.ts';
 export interface BorradorOptions {
   /** Genera aunque sea festivo o fin de semana, o aunque ya esté publicada. */
   forzar?: boolean;
+  /** Borrador de prueba: va a content/<id>/ensayo/ y nunca a ediciones/. */
+  ensayo?: boolean;
   sinIa?: boolean;
   root?: string;
   /** Solo para los tests. */
@@ -64,7 +71,8 @@ export async function generarBorrador(
   }
 
   // Nunca se pisa una edición ya publicada sin pedirlo.
-  const existente = await readEdition(ciudad.id, fecha, root).catch(() => undefined);
+  const kind: EditionKind = options.ensayo ? 'ensayo' : 'ediciones';
+  const existente = await readEdition(ciudad.id, fecha, root, kind).catch(() => undefined);
   if (existente?.frontmatter.estado === 'publicada' && !forzar) {
     return {
       ok: false,
@@ -77,7 +85,8 @@ export async function generarBorrador(
     city: ciudad,
     date: fecha,
     http: options.http ?? new HttpClient(),
-    numero: await editionNumber(ciudad.id, fecha, root),
+    numero: await editionNumber(ciudad.id, fecha, root, kind),
+    kind,
     weekend: { from: 'agenda', to: 'finde' },
     root,
     ...redaccion,
@@ -92,7 +101,7 @@ export async function generarBorrador(
     ];
   }
 
-  const archivo = await writeEdition(edition, root);
+  const archivo = await writeEdition(edition, root, kind);
   const informe = reportPath(ciudad.id, fecha, root);
   await mkdir(path.dirname(informe), { recursive: true });
   await writeFile(informe, JSON.stringify(report, null, 2), 'utf8');

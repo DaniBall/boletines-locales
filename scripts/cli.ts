@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { getCiudad, idsCiudades } from '../ciudades/index.ts';
 import { editionUrl, readEdition } from '../pipeline/lib/edicion.ts';
-import { today } from '../pipeline/lib/fechas.ts';
+import { greetingDate, today } from '../pipeline/lib/fechas.ts';
 import { HttpClient } from '../pipeline/lib/http.ts';
 import { renderWhatsapp } from '../pipeline/render/whatsapp.ts';
 import { collect, formatHealthTable } from '../pipeline/steps/collect.ts';
@@ -31,10 +31,12 @@ function parseArgs(argv: string[]): { command: string; flags: Map<string, string
 
 const AYUDA = `Uso: npm run <comando> -- --ciudad <id> [--fecha AAAA-MM-DD]
 
-  whatsapp   Imprime el texto listo para pegar en el Canal.
+  whatsapp   Imprime el texto listo para pegar en el Canal. Con --ensayo, el de un borrador de prueba.
+  aviso      Título, texto y enlace del aviso de un borrador (--ensayo) o de una edición.
   edicion    Genera el borrador de la edición. Redacta con Claude si hay
              ANTHROPIC_API_KEY; con --sin-ia, no. --forzar para festivos o para
-             regenerar una publicada.
+             regenerar una publicada. Con --ensayo, el borrador va a
+             content/<id>/ensayo/ para enseñarlo en /ensayo/ de la web.
   fuentes    Tabla de salud de las fuentes: pide a cada una y dice cómo está.
   ciudades   Lista las ciudades. Con --json, la matriz que consume el CI.
 
@@ -67,9 +69,10 @@ async function main(): Promise<number> {
 
   switch (command) {
     case 'whatsapp': {
-      const edicion = await readEdition(ciudad.id, fecha);
+      const kind = flags.has('ensayo') ? 'ensayo' : 'ediciones';
+      const edicion = await readEdition(ciudad.id, fecha, undefined, kind);
       process.stdout.write(
-        `${renderWhatsapp(edicion.body, { editionUrl: editionUrl(ciudad, fecha) })}\n`,
+        `${renderWhatsapp(edicion.body, { editionUrl: editionUrl(ciudad, fecha, kind) })}\n`,
       );
       return 0;
     }
@@ -89,6 +92,22 @@ async function main(): Promise<number> {
     case 'edicion':
       return edicion(ciudad, fecha, flags);
 
+    case 'aviso': {
+      // Lo que manda el workflow de avisos cuando sube un borrador o una edición.
+      const ensayo = flags.has('ensayo');
+      const kind = ensayo ? 'ensayo' : 'ediciones';
+      const { frontmatter } = await readEdition(ciudad.id, fecha, undefined, kind);
+      const aviso = {
+        titulo: ensayo
+          ? `Ensayo de ${ciudad.name}: borrador del día ${String(frontmatter.numero)}`
+          : `${ciudad.brand.name}: edición nº ${String(frontmatter.numero)} publicada`,
+        mensaje: `${greetingDate(fecha)}. Ya está en la web.`,
+        url: editionUrl(ciudad, fecha, kind),
+      };
+      process.stdout.write(`${JSON.stringify(aviso)}\n`);
+      return 0;
+    }
+
     default:
       process.stdout.write(AYUDA);
       return 1;
@@ -104,6 +123,7 @@ async function edicion(
   const resultado = await generarBorrador(ciudad, fecha, {
     forzar: flags.has('forzar'),
     sinIa: flags.has('sin-ia'),
+    ensayo: flags.has('ensayo'),
   });
   if (!resultado.ok) {
     process.stderr.write(`${resultado.motivo}\n`);

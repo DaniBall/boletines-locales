@@ -8,9 +8,8 @@ import { normalizeIsoDate } from '../pipeline/lib/fechas.ts';
 // Solo se cargan las ediciones de la ciudad que se está construyendo.
 const ciudad = ciudadActual();
 
-const ediciones = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: `./${paths.content}/${ciudad.id}/ediciones` }),
-  schema: z.object({
+const esquemaEdicion = () =>
+  z.object({
     ciudad: z.literal(ciudad.id),
     // El YAML sin comillas entrega un Date; se normaliza a AAAA-MM-DD.
     fecha: z.union([z.string(), z.date()]).transform(normalizeIsoDate),
@@ -26,7 +25,18 @@ const ediciones = defineCollection({
       )
       .default([]),
     avisos: z.array(z.string()).default([]),
-  }),
+  });
+
+const ediciones = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: `./${paths.content}/${ciudad.id}/ediciones` }),
+  schema: esquemaEdicion(),
 });
 
-export const collections = { ediciones };
+// Borradores del ensayo: se enseñan en /ensayo/ para que gente de la ciudad los
+// compruebe. Otra colección, para que nunca se mezclen con lo publicado.
+const ensayo = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: `./${paths.content}/${ciudad.id}/ensayo` }),
+  schema: esquemaEdicion(),
+});
+
+export const collections = { ediciones, ensayo };

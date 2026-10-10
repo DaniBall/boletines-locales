@@ -5,26 +5,47 @@ import { limits, paths } from '../config.ts';
 import type { CityConfig, Edition, EditionFrontmatter } from '../types.ts';
 import { normalizeIsoDate, previousDates, type IsoDate } from './fechas.ts';
 
-/** content/<ciudad>/ediciones */
-export function editionsDir(cityId: string, root = process.cwd()): string {
-  return path.join(root, paths.content, cityId, 'ediciones');
+/**
+ * Dónde vive una edición: `ediciones` es lo publicable; `ensayo`, los
+ * borradores de prueba que se enseñan a quien ayuda a comprobarlos. Nada de
+ * `ensayo` puede acabar publicado por error: es otra carpeta y otra web.
+ */
+export type EditionKind = 'ediciones' | 'ensayo';
+
+/** content/<ciudad>/ediciones (o /ensayo) */
+export function editionsDir(
+  cityId: string,
+  root = process.cwd(),
+  kind: EditionKind = 'ediciones',
+): string {
+  return path.join(root, paths.content, cityId, kind);
 }
 
-export function editionPath(cityId: string, date: IsoDate, root = process.cwd()): string {
-  return path.join(editionsDir(cityId, root), `${date}.md`);
+export function editionPath(
+  cityId: string,
+  date: IsoDate,
+  root = process.cwd(),
+  kind: EditionKind = 'ediciones',
+): string {
+  return path.join(editionsDir(cityId, root, kind), `${date}.md`);
 }
 
 /** URL pública de una edición, a partir del dominio de la ciudad. */
-export function editionUrl(city: CityConfig, date: IsoDate): string {
-  return `${city.brand.domain.replace(/\/$/, '')}/ediciones/${date}/`;
+export function editionUrl(
+  city: CityConfig,
+  date: IsoDate,
+  kind: EditionKind = 'ediciones',
+): string {
+  return `${city.brand.domain.replace(/\/$/, '')}/${kind}/${date}/`;
 }
 
 export async function readEdition(
   cityId: string,
   date: IsoDate,
   root = process.cwd(),
+  kind: EditionKind = 'ediciones',
 ): Promise<Edition> {
-  const file = editionPath(cityId, date, root);
+  const file = editionPath(cityId, date, root, kind);
   let raw: string;
   try {
     raw = await readFile(file, 'utf8');
@@ -50,26 +71,30 @@ function urlsDelCuerpo(body: string): string[] {
 /**
  * Lo enlazado en las ediciones recientes de una ciudad, para que `select` no
  * repita lo que ya se contó. Las ediciones que falten (festivos, fines de
- * semana o días sin edición) simplemente no suman.
+ * semana o días sin edición) simplemente no suman. Durante el ensayo se pasan
+ * también los borradores de `ensayo`, que hacen de ediciones publicadas.
  */
 export async function publishedUrls(
   cityId: string,
   date: IsoDate,
   days: number = limits.dedupeWindowDays,
   root = process.cwd(),
+  kinds: readonly EditionKind[] = ['ediciones'],
 ): Promise<string[]> {
   const urls: string[] = [];
 
   for (const dia of previousDates(date, days)) {
-    let edicion: Edition;
-    try {
-      edicion = await readEdition(cityId, dia, root);
-    } catch {
-      continue;
-    }
-    urls.push(...urlsDelCuerpo(edicion.body));
-    for (const fuente of edicion.frontmatter.fuentes ?? []) {
-      if (fuente.url) urls.push(fuente.url);
+    for (const kind of kinds) {
+      let edicion: Edition;
+      try {
+        edicion = await readEdition(cityId, dia, root, kind);
+      } catch {
+        continue;
+      }
+      urls.push(...urlsDelCuerpo(edicion.body));
+      for (const fuente of edicion.frontmatter.fuentes ?? []) {
+        if (fuente.url) urls.push(fuente.url);
+      }
     }
   }
 
@@ -85,10 +110,11 @@ export async function editionNumber(
   cityId: string,
   date: IsoDate,
   root = process.cwd(),
+  kind: EditionKind = 'ediciones',
 ): Promise<number> {
   let archivos: string[];
   try {
-    archivos = await readdir(editionsDir(cityId, root));
+    archivos = await readdir(editionsDir(cityId, root, kind));
   } catch {
     return 1;
   }
@@ -96,17 +122,21 @@ export async function editionNumber(
   let maximo = 0;
   for (const archivo of archivos) {
     if (!/^\d{4}-\d{2}-\d{2}\.md$/.test(archivo)) continue;
-    const { frontmatter } = await readEdition(cityId, archivo.slice(0, 10), root);
+    const { frontmatter } = await readEdition(cityId, archivo.slice(0, 10), root, kind);
     if (frontmatter.fecha === date) return frontmatter.numero;
     maximo = Math.max(maximo, frontmatter.numero);
   }
   return maximo + 1;
 }
 
-/** Escribe la edición en content/<ciudad>/ediciones/AAAA-MM-DD.md. */
-export async function writeEdition(edition: Edition, root = process.cwd()): Promise<string> {
+/** Escribe la edición en content/<ciudad>/ediciones/AAAA-MM-DD.md (o en /ensayo). */
+export async function writeEdition(
+  edition: Edition,
+  root = process.cwd(),
+  kind: EditionKind = 'ediciones',
+): Promise<string> {
   const { ciudad, fecha } = edition.frontmatter;
-  const file = editionPath(ciudad, fecha, root);
+  const file = editionPath(ciudad, fecha, root, kind);
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, matter.stringify(`\n${edition.body}\n`, edition.frontmatter), 'utf8');
   return file;
