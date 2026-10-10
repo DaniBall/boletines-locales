@@ -5,7 +5,7 @@
 import type { SourceHealth } from '../pipeline/steps/collect.ts';
 import { messageLength } from '../pipeline/steps/validate.ts';
 import type { EditionReport } from '../pipeline/steps/edition.ts';
-import type { CityConfig, Edition } from '../pipeline/types.ts';
+import type { CityConfig, Edition, Item } from '../pipeline/types.ts';
 
 export function escapeHtml(texto: string): string {
   return texto
@@ -160,7 +160,12 @@ export function vistaEdicion(vista: EditionView): string {
 function vistaInforme(report: EditionReport): string {
   const fuentes = report.health.map(filaFuente).join('');
   const descartesIa = report.descartesIa ?? [];
+  // Informes antiguos no traen lo seleccionado.
+  const seleccionados = report.selected ?? [];
   return [
+    `<details><summary>Lo que recibió la redacción (${String(seleccionados.length)})</summary>
+      <p><small>Texto de las fuentes, tal cual: sirve para comprobar cada entrada.</small></p>
+      <ul>${seleccionados.map(filaItem).join('')}</ul></details>`,
     `<details><summary>Fuentes (${String(report.health.length)})</summary>
       <table><thead><tr><th>Fuente</th><th>Sección</th><th>Estado</th><th class="num">Items</th></tr></thead>
       <tbody>${fuentes}</tbody></table></details>`,
@@ -174,6 +179,28 @@ function vistaInforme(report: EditionReport): string {
       )
       .join('')}</ul></details>`,
   ].join('\n');
+}
+
+const MAX_RESUMEN_PANEL = 300;
+
+function filaItem(item: Item): string {
+  const resumen =
+    item.summary === undefined
+      ? ''
+      : item.summary.length <= MAX_RESUMEN_PANEL
+        ? item.summary
+        : `${item.summary.slice(0, MAX_RESUMEN_PANEL - 1)}…`;
+  // Solo enlaces http(s): nada de javascript: ni otros esquemas.
+  const titulo =
+    item.url !== undefined && /^https?:\/\//i.test(item.url)
+      ? `<a href="${escapeHtml(item.url)}" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
+      : escapeHtml(item.title);
+  const detalles = [item.section, item.source, item.place].filter(
+    (dato): dato is string => dato !== undefined && dato !== '',
+  );
+  return `<li>${titulo} <small>(${escapeHtml(detalles.join(' · '))})</small>${
+    resumen === '' ? '' : `<br><small>${escapeHtml(resumen)}</small>`
+  }</li>`;
 }
 
 function filaFuente(fuente: SourceHealth): string {

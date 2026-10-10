@@ -8,6 +8,7 @@ import {
   createClaudeDrafter,
   linkCost,
   loadStylePrompt,
+  maxEntries,
   parseDraft,
   type MessagesClient,
 } from '../pipeline/steps/draft.ts';
@@ -163,6 +164,17 @@ describe('los prompts', () => {
     expect(mensaje).toContain('quedan unos 1200 caracteres');
     expect(mensaje).toContain(`"enlace": ${String(linkCost(items[1] as Item))}`);
     expect(linkCost(items[1] as Item)).toBe('https://ayto.invalid/concierto'.length + 16);
+  });
+
+  it('traduce el espacio a un número máximo de entradas, con el enlace medio', () => {
+    const ids = new Set(['ayto:1', 'diario:1']);
+    const medio = (linkCost(items[1] as Item) + linkCost(items[2] as Item)) / 2;
+
+    expect(maxEntries(1200, items, ids)).toBe(Math.floor(1200 / (medio + 170)));
+    expect(maxEntries(10, items, ids)).toBe(1);
+    expect(
+      buildUserMessage(ciudad, '2026-09-30', items, aiSections(ciudad, items), 1200),
+    ).toContain(`caben como mucho ${String(maxEntries(1200, items, ids))} entradas`);
   });
 
   it('el viernes avisa de que la edición incluye el fin de semana', () => {

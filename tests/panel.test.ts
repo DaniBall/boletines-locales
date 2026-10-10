@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -10,7 +10,7 @@ import { createPanel } from '../panel/servidor.ts';
 import { escapeHtml } from '../panel/vistas.ts';
 import { readEdition, writeEdition } from '../pipeline/lib/edicion.ts';
 import type { Edition } from '../pipeline/types.ts';
-import type { BorradorResult } from '../scripts/borrador.ts';
+import { reportPath, type BorradorResult } from '../scripts/borrador.ts';
 
 const exec = promisify(execFile);
 const FECHA = '2026-09-30';
@@ -88,6 +88,52 @@ describe('el panel de revisión', () => {
     expect(html).toContain('*📰 Te afecta*');
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
+  });
+
+  it('enseña lo que recibió la redacción, escapado y sin enlaces peligrosos', async () => {
+    const informe = reportPath('jaen', FECHA, root);
+    await mkdir(path.dirname(informe), { recursive: true });
+    await writeFile(
+      informe,
+      JSON.stringify({
+        health: [],
+        discarded: [],
+        errors: [],
+        warnings: [],
+        whatsapp: '',
+        sinRedactar: [],
+        descartesIa: [],
+        selected: [
+          {
+            id: 'a',
+            source: 'diario',
+            section: 'te_afecta',
+            title: 'Obras <b>ya</b>',
+            summary: 'Corte en la calle Mayor.',
+            url: 'https://diario.invalid/obras',
+            place: 'Calle Mayor, Jaén',
+          },
+          {
+            id: 'b',
+            source: 'raro',
+            section: 'agenda',
+            title: 'Trampa',
+            url: 'javascript:alert(1)',
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const html = await (await fetch(`${base}/jaen/${FECHA}/`)).text();
+
+    expect(html).toContain('Lo que recibió la redacción (2)');
+    expect(html).toContain(
+      '<a href="https://diario.invalid/obras" rel="noopener noreferrer">Obras &lt;b&gt;ya&lt;/b&gt;</a>',
+    );
+    expect(html).toContain('te_afecta · diario · Calle Mayor, Jaén');
+    expect(html).toContain('Corte en la calle Mayor.');
+    expect(html).not.toContain('javascript:');
   });
 
   it('guarda los cambios del Markdown y conserva el frontmatter', async () => {
