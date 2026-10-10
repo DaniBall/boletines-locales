@@ -132,3 +132,16 @@ describe('los festivos', () => {
     expect(edicion('vitoria', '2026-08-05')).toBe(false);
   });
 });
+
+describe('los avisos del ensayo', () => {
+  it('el tema de ntfy de cada ciudad es válido y no se repite entre ciudades', () => {
+    const temas = ciudades.flatMap((ciudad) =>
+      ciudad.rehearsal ? [ciudad.rehearsal.notifyTopic] : [],
+    );
+
+    // ntfy.sh admite letras, números, guiones y guiones bajos, hasta 64.
+    expect(temas.every((tema) => /^[a-z0-9_-]{20,64}$/.test(tema))).toBe(true);
+    expect(new Set(temas).size).toBe(temas.length);
+    expect(getCiudad('jaen').rehearsal?.notifyTopic).toMatch(/^boletin-jaen-ensayo-/);
+  });
+});

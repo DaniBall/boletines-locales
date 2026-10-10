@@ -1,8 +1,10 @@
 name: Avisos
 
 # Cuando llega a main un borrador del ensayo o una edición, espera a que
-# Cloudflare la sirva y manda un aviso al móvil del editor por ntfy.
-# El tema de ntfy va en el secret NTFY_TOPIC: sin él, el workflow no avisa.
+# Cloudflare la sirva y manda un aviso por ntfy:
+# - al tema privado del editor, el secret NTFY_TOPIC (si está);
+# - en los borradores, también al tema público del ensayo de la ciudad
+#   (`rehearsal.notifyTopic` en su config), el de la campana de /ensayo/.
 
 on:
   push:
@@ -37,11 +39,6 @@ jobs:
           ANTES: ${{ github.event.before }}
           DESPUES: ${{ github.sha }}
         run: |
-          if [ -z "$NTFY_TOPIC" ]; then
-            echo "::notice::Sin NTFY_TOPIC: no se manda ningún aviso."
-            exit 0
-          fi
-
           # Lo añadido o cambiado en este push (si no hay commit anterior, el último).
           if [ -z "$ANTES" ] || [ "$ANTES" = "0000000000000000000000000000000000000000" ]; then
             ANTES="$DESPUES~1"
@@ -59,6 +56,11 @@ jobs:
 
             aviso=$(npm run --silent aviso -- --ciudad "$ciudad" --fecha "$fecha" $extra)
             url=$(echo "$aviso" | jq -r .url)
+            tema=$(echo "$aviso" | jq -r '.tema // empty')
+            if [ -z "$NTFY_TOPIC" ] && [ -z "$tema" ]; then
+              echo "::notice::Sin NTFY_TOPIC ni tema del ensayo: no se avisa de $url."
+              continue
+            fi
 
             # Espera a que Cloudflare despliegue la página (hasta 15 minutos).
             for intento in $(seq 1 30); do
@@ -70,10 +72,13 @@ jobs:
               echo "::warning::$url sigue sin responder ($codigo): aviso igualmente."
             fi
 
-            # En JSON y no en cabeceras: los títulos llevan tildes.
-            echo "$aviso" \
-              | jq --arg topic "$NTFY_TOPIC" \
-                  '{topic: $topic, title: .titulo, message: .mensaje, click: .url, tags: ["newspaper"]}' \
-              | curl -sS --fail -H 'Content-Type: application/json' --data-binary @- https://ntfy.sh/ > /dev/null
+            for destino in "$NTFY_TOPIC" "$tema"; do
+              [ -z "$destino" ] && continue
+              # En JSON y no en cabeceras: los títulos llevan tildes.
+              echo "$aviso" \
+                | jq --arg topic "$destino" \
+                    '{topic: $topic, title: .titulo, message: .mensaje, click: .url, tags: ["newspaper"]}' \
+                | curl -sS --fail -H 'Content-Type: application/json' --data-binary @- https://ntfy.sh/ > /dev/null
+            done
             echo "Aviso enviado: $url"
           done < cambios.txt

@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import CampanaAvisos from '../../components/CampanaAvisos.astro';
 import { ciudadActual } from '../../../ciudades/index.ts';
 import { longDate } from '../../../pipeline/lib/fechas.ts';
 
@@ -20,6 +21,8 @@ const borradores = (await getCollection('ensayo')).sort((a, b) =>
     Estos son borradores de prueba: no se han publicado. Cada mañana sale uno, escrito a partir de
     las webs que se enlazan en cada noticia.
   </p>
+  {ciudad.rehearsal && <CampanaAvisos tema={ciudad.rehearsal.notifyTopic} />}
+
   <h2>Cómo ayudar</h2>
   <ul>
     <li>Abre el borrador del día y lee cada noticia y cada plan.</li>

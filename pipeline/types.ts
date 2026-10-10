@@ -34,6 +34,13 @@ export interface CityConfig {
   collectors: Collector[];
   /** AAAA-MM-DD sin edición. */
   holidays: readonly string[];
+  /**
+   * Ensayo: el tema público de ntfy.sh al que avisa `avisos.yml` cuando sale un
+   * borrador, y al que se suscribe quien pulsa la campana de /ensayo/. Público
+   * a propósito: lo enseña la web. Los avisos al editor van además a su tema
+   * privado (`NTFY_TOPIC`).
+   */
+  rehearsal?: { notifyTopic: string };
 }
 
 export interface CollectContext {
