@@ -64,6 +64,18 @@ describe('generarBorrador', () => {
     expect(forzado.ok).toBe(true);
   });
 
+  it('avisa si la ciudad no tiene festivos de ese año', async () => {
+    const sinFestivos = await generarBorrador(ciudad, '2027-01-04', { root, http, sinIa: true });
+    const conFestivos = await generarBorrador(ciudad, '2026-09-30', { root, http, sinIa: true });
+
+    expect(sinFestivos.ok && sinFestivos.edition.frontmatter.avisos).toContain(
+      'Faltan los festivos de 2027 de Villa Prueba en su config: hoy podría ser fiesta.',
+    );
+    expect(
+      conFestivos.ok && conFestivos.edition.frontmatter.avisos?.some((a) => a.includes('festivos')),
+    ).toBe(false);
+  });
+
   it('no pisa una edición publicada', async () => {
     await writeEdition(
       {
