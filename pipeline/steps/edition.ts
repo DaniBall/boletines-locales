@@ -46,6 +46,11 @@ export interface EditionInput {
 export interface EditionReport {
   health: SourceHealth[];
   discarded: Discarded[];
+  /**
+   * Lo que pasó `select` y recibió la redacción, para comprobar cada entrada
+   * contra su fuente. Lleva texto de terceros: el informe vive fuera de git.
+   */
+  selected: Item[];
   errors: Issue[];
   warnings: Issue[];
   /** El texto de WhatsApp, tal cual saldría. */
@@ -136,6 +141,7 @@ export async function generateEdition(
     report: {
       health,
       discarded,
+      selected,
       errors,
       warnings: [...warnings, ...largo],
       whatsapp,

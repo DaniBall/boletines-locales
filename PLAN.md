@@ -123,6 +123,12 @@ Sin aprobación no se publica nada. Cada ciudad suma una revisión diaria, y la 
 5. Una o dos semanas de ensayo sin publicar.
 6. VPS, dominio, control de acceso al panel, timer y avisos al editor.
 
+**Notas del ensayo (Jaén)**
+
+- Día 1 (2-10-2026): Claude deducía del título la hora y el tipo de evento («esta noche», «concierto»). Se arregló con la guía de estilo v3 y con la ficha de cada actividad de la agenda (descripción, lugar y horario).
+- Día 2 (9-10-2026; el aviso del lunes 5 no llegó a tiempo): horas, lugares y cifras, correctos. Problemas: el mensaje pasaba del tope (3.344 caracteres), así que ahora Claude recibe el número máximo de entradas que caben; un matiz de sujeto («Alsa desconvoca»); una noticia del día anterior que no cambia el día del lector. «Este finde» salió vacío porque la agenda semanal no traía nada que empezara el sábado o el domingo. El informe de revisión guarda ahora lo que recibió la redacción, y el panel lo enseña.
+- Pendiente: los festivos (el 12 de octubre no está en `holidays` de ninguna ciudad).
+
 ## 6. Redacción con Claude
 
 - Una llamada por edición y ciudad: modelo `claude-sonnet-5`; en `system`, la guía común más el toque local de la ciudad; en `user`, la fecha, el día de la semana y los items seleccionados en JSON (id, título, resumen de la fuente, fecha, lugar y URL).

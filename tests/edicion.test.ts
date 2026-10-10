@@ -239,6 +239,8 @@ describe('generateEdition', () => {
     expect(edition.body).not.toContain('Bulo');
     expect(report.errors).toHaveLength(1);
     expect(report.sinIa).toBeUndefined();
+    // El informe guarda lo que recibió la redacción, para comprobarlo.
+    expect(report.selected.map((item) => item.id)).toEqual([noticia.id]);
     expect(edition.frontmatter.avisos?.some((a) => a.startsWith('Quitado del borrador:'))).toBe(
       true,
     );
